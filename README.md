@@ -37,7 +37,6 @@ football-explorer/
 ├── visuals.py             # Folium map generation and Matplotlib/Plotly charts
 ├── database.db            # Local SQLite database (Generated on run)
 ├── requirements.txt       # Project dependencies (Flask, requests, folium, etc.)
-│
 ├── static/
 │   ├── css/style.css      # Custom styling
 │   └── js/main.js         # Frontend logic (Search autocomplete)
