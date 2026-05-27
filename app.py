@@ -16,7 +16,7 @@ def search():
     """Handles user search input."""
     if request.method == "POST":
         query = request.form.get("search_query")
-        return f"Searching for: {query}"
+        return redirect(url_for("stadiums", team_name=query))
 
     return redirect(url_for("index"))
 
@@ -32,6 +32,7 @@ def matches():
 @app.route("/stadiums")
 def stadiums():
     """Displays team details, badges, and stadium information."""
+
     return render_template("base.html", content="Stadiums Page Placeholder")
 
 
