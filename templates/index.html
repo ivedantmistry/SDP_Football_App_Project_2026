@@ -1,0 +1,89 @@
+{% extends "base.html" %} {% block content %}
+<div class="row mt-4">
+  <!-- Top Leagues -->
+  <div class="col-md-3 d-none d-md-block">
+    <div class="surface-card p-3 mb-4">
+      <h6 class="fw-bold mb-3">Top Leagues</h6>
+      <ul class="list-unstyled mb-0">
+        <li class="mb-3 d-flex align-items-center match-row p-1 rounded">
+          <span class="me-2">🏆</span> Premier League
+        </li>
+        <li class="mb-3 d-flex align-items-center match-row p-1 rounded">
+          <span class="me-2">🏆</span> Bundesliga
+        </li>
+        <li class="d-flex align-items-center match-row p-1 rounded">
+          <span class="me-2">🏆</span> Champions League
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CENTER COLUMN: Search & Matches -->
+  <div class="col-md-6">
+    <!-- Search Section -->
+    <div class="surface-card p-4 mb-4">
+      <h4 class="fw-bold mb-4 text-center">Football Explorer</h4>
+      <form action="{{ url_for('search') }}" method="POST">
+        <div class="input-group shadow-sm">
+          <input
+            type="text"
+            class="form-control custom-search-input"
+            name="search_query"
+            placeholder="Search for teams, leagues, or cities..."
+            required
+          />
+          <button type="submit" class="btn custom-search-btn">Search</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Matches Section (Simulating the provided UI) -->
+    <div class="surface-card p-0 mb-4">
+      <!-- Header -->
+      <div
+        class="p-3 border-bottom border-dark d-flex justify-content-between align-items-center"
+      >
+        <h6 class="mb-0 fw-bold">Recent Matches</h6>
+        <span class="text-muted-custom">Today</span>
+      </div>
+
+      <!-- Match Item 1 -->
+      <div
+        class="p-3 d-flex justify-content-between align-items-center match-row border-bottom border-dark"
+      >
+        <span class="text-muted-custom">FT</span>
+        <div class="d-flex w-50 justify-content-between fw-bold">
+          <span>Arsenal</span>
+          <span>3 - 1</span>
+          <span>Chelsea</span>
+        </div>
+        <span class="text-muted-custom">Details &rsaquo;</span>
+      </div>
+
+      <!-- Match Item 2 -->
+      <div
+        class="p-3 d-flex justify-content-between align-items-center match-row"
+      >
+        <span class="text-muted-custom">FT</span>
+        <div class="d-flex w-50 justify-content-between fw-bold">
+          <span>Bayern Munich</span>
+          <span>2 - 0</span>
+          <span>Dortmund</span>
+        </div>
+        <span class="text-muted-custom">Details &rsaquo;</span>
+      </div>
+    </div>
+  </div>
+
+  <!--Widgets & Favorites -->
+  <div class="col-md-3">
+    <div class="surface-card p-3 mb-4">
+      <h6 class="fw-bold mb-3">Saved Favorites</h6>
+      <p class="text-muted-custom mb-0">
+        You have not saved any teams yet. Use the search bar to find and add
+        your favorite clubs.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
