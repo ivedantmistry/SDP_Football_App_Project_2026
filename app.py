@@ -1,7 +1,10 @@
 from flask import Flask, jsonify, render_template, request, redirect, url_for
 from api_client import get_team_fixtures, search_teams_list, get_exact_team
+import db_manager
 
 app = Flask(__name__)
+
+db_manager.init_db()
 
 
 # 1. Search Bar
@@ -20,6 +23,37 @@ def search():
         return redirect(url_for("stadiums", team_name=query))
 
     return redirect(url_for("index"))
+
+
+@app.route("/api/history", methods=["GET"])
+def get_history():
+    recent_searches = db_manager.get_recent_searches()
+    return jsonify(recent_searches)
+
+
+@app.route("/api/history", methods=["POST"])
+def save_history():
+    data = request.json
+    team_name = data.get("team_name")
+    team_logo = data.get("team_logo")
+
+    if team_name and team_logo:
+        db_manager.save_search(team_name, team_logo)
+        return jsonify({"status": "success"}), 200
+    return jsonify({"status": "error", "message": "Missing data"}), 400
+
+
+@app.route("/api/history", methods=["DELETE"])
+def delete_history():
+    data = request.json
+    team_name = data.get("team_name")
+
+    if team_name:
+        db_manager.delete_search(team_name)
+    else:
+        db_manager.clear_all_searches()
+
+    return jsonify({"status": "success"}), 200
 
 
 # 3. Matches View

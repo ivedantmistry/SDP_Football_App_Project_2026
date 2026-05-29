@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import requests
 import os
 from dotenv import load_dotenv
@@ -170,7 +172,62 @@ def get_team_fixtures(team_id):
                 "away_logo": next_1["teams"]["away"]["logo"],
             }
 
-        return {"form": form_data, "next_match": next_match_data}
+            all_fixtures_data = []
+        for match in fixtures_list:
+            home_team = match["teams"]["home"]
+            away_team = match["teams"]["away"]
+
+            raw_date_str = match["fixture"]["date"]
+            try:
+                dt_obj = datetime.fromisoformat(raw_date_str.replace("+00:00", ""))
+                formatted_date = dt_obj.strftime("%a, %b %d")
+                time_12hr = dt_obj.strftime("%I:%M %p")
+            except ValueError:
+                formatted_date = raw_date_str[:10]
+                time_12hr = raw_date_str[11:16]
+
+            status = match["fixture"]["status"]["short"]
+            home_goals = match["goals"]["home"]
+            away_goals = match["goals"]["away"]
+
+            result = "N/A"
+            if (
+                status in ["FT", "AET", "PEN"]
+                and home_goals is not None
+                and away_goals is not None
+            ):
+                is_home = home_team["id"] == team_id
+                if home_goals == away_goals:
+                    result = "D"
+                elif (is_home and home_goals > away_goals) or (
+                    not is_home and away_goals > home_goals
+                ):
+                    result = "W"
+                else:
+                    result = "L"
+
+            all_fixtures_data.append(
+                {
+                    "date": formatted_date,
+                    "time": time_12hr,
+                    "status": status,
+                    "home_team": home_team["name"],
+                    "home_logo": home_team["logo"],
+                    "away_team": away_team["name"],
+                    "away_logo": away_team["logo"],
+                    "home_goals": match["goals"]["home"],
+                    "away_goals": match["goals"]["away"],
+                    "league_name": match["league"]["name"],
+                    "league_logo": match["league"]["logo"],
+                    "result": result,
+                }
+            )
+
+        return {
+            "form": form_data,
+            "next_match": next_match_data,
+            "all_matches": all_fixtures_data,
+        }
 
     except requests.exceptions.RequestException as e:
         print(f"Error fetching fixtures: {e}")
