@@ -1,35 +1,177 @@
 import requests
+import os
+from dotenv import load_dotenv
 
 
-def get_team_details(team_name):
-    """
-    Fetches team details and stadium information from TheSportsDB API.
-    """
-    url = f"https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t={team_name}"
+load_dotenv()
+
+API_KEY = os.getenv("API_SPORTS_KEY")
+
+HEADERS = {"x-apisports-key": API_KEY}
+
+
+def search_teams_list(query):
+
+    url = "https://v3.football.api-sports.io/teams"
+    querystring = {"search": query}
 
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=HEADERS, params=querystring)
         response.raise_for_status()
-
         data = response.json()
 
-        # Check if the API returned
-        if data.get("teams"):
-            team = data["teams"][0]
+        if data.get("errors"):
+            print(f"API Error (Search): {data['errors']}")
 
-            extracted_data = {
-                "id": team.get("idTeam"),
-                "name": team.get("strTeam"),
-                "badge_url": team.get("strTeamBadge"),
-                "stadium_name": team.get("strStadium"),
-                "stadium_location": team.get("strStadiumLocation"),
-                "stadium_capacity": team.get("intStadiumCapacity"),
-                "description": team.get("strDescriptionEN"),
-            }
-            return extracted_data
-        else:
-            return None  # Team not found
+        results = []
+
+        if data.get("response"):
+            for item in data["response"]:
+                team = item.get("team", {})
+                venue = item.get("venue", {})
+
+                founded = team.get("founded") or "an unknown year"
+                country = team.get("country", "Unknown")
+                city = venue.get("city", country)
+                surface = venue.get("surface", "grass")
+
+                dynamic_description = (
+                    f"{team.get('name')} is a professional football club based in {city}, {country}. "
+                    f"Founded in {founded}, the team plays their home matches at {venue.get('name')}. "
+                    f"The stadium features a {surface} surface and can hold up to {venue.get('capacity')} fans."
+                )
+
+                results.append(
+                    {
+                        "id": team.get("id"),
+                        "name": team.get("name"),
+                        "badge_url": team.get("logo"),
+                        "stadium_name": venue.get("name") or "Unknown Stadium",
+                        "stadium_location": venue.get("city") or "Unknown Location",
+                        "stadium_capacity": venue.get("capacity") or "N/A",
+                        "description": dynamic_description,
+                    }
+                )
+
+        return results
 
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching data: {e}")
-        return None
+        print(f"Error fetching data from API-Football: {e}")
+        return []
+
+
+def get_exact_team(team_name):
+    """
+    Finds one specific team for the detail page.
+    """
+    search_term = team_name.split()[0]
+    teams = search_teams_list(search_term)
+
+    # Try to find an exact name match first
+    for team in teams:
+        if team["name"].lower() == team_name.lower():
+            return team
+
+    if teams:
+        return teams[0]
+
+    return None
+
+
+def get_team_fixtures(team_id):
+
+    if not API_KEY:
+        return {"form": [], "next_match": None}
+
+    base_url = "https://v3.football.api-sports.io/fixtures"
+
+    current_season = 2024
+
+    try:
+        res = requests.get(
+            base_url,
+            headers=HEADERS,
+            params={"team": team_id, "season": current_season},
+        )
+        res.raise_for_status()
+        data = res.json()
+
+        if data.get("errors"):
+            return {"form": [], "next_match": None}
+
+        fixtures_list = data.get("response", [])
+
+        past_matches = []
+        future_matches = []
+
+        for match in fixtures_list:
+            status = match["fixture"]["status"]["short"]
+            if status in ["FT", "AET", "PEN"]:  # Finished
+                past_matches.append(match)
+            elif status in ["NS", "TBD"]:
+                future_matches.append(match)
+
+        past_matches.sort(key=lambda x: x["fixture"]["timestamp"], reverse=True)
+        # Take the most recent 5, then reverse to chronological order for UI display
+        last_5 = past_matches[:5][::-1]
+
+        # Sort future matches by timestamp ascending (soonest first)
+        future_matches.sort(key=lambda x: x["fixture"]["timestamp"])
+        next_1 = future_matches[0] if future_matches else None
+
+        if not next_1 and len(past_matches) > 5:
+            next_1 = past_matches[5]
+
+        # 4. Format Form Data for UI
+        form_data = []
+        for match in last_5:
+            home_team = match["teams"]["home"]
+            away_team = match["teams"]["away"]
+            goals_home = match["goals"]["home"]
+            goals_away = match["goals"]["away"]
+
+            is_home = home_team["id"] == team_id
+            opponent = away_team if is_home else home_team
+
+            if goals_home is None or goals_away is None:
+                result = "D"
+                score_display = "? - ?"
+            else:
+                score_display = f"{goals_home} - {goals_away}"
+                if goals_home == goals_away:
+                    result = "D"
+                elif (is_home and goals_home > goals_away) or (
+                    not is_home and goals_away > goals_home
+                ):
+                    result = "W"
+                else:
+                    result = "L"
+
+            form_data.append(
+                {
+                    "opponent_logo": opponent["logo"],
+                    "score": score_display,
+                    "result": result,
+                }
+            )
+
+        # 5. Format Next Match Data for UI
+        next_match_data = None
+        if next_1:
+            raw_date = next_1["fixture"]["date"]
+            next_match_data = {
+                "league": next_1["league"]["name"],
+                "league_logo": next_1["league"]["logo"],
+                "date": raw_date[:10],
+                "time": raw_date[11:16],
+                "home_team": next_1["teams"]["home"]["name"],
+                "home_logo": next_1["teams"]["home"]["logo"],
+                "away_team": next_1["teams"]["away"]["name"],
+                "away_logo": next_1["teams"]["away"]["logo"],
+            }
+
+        return {"form": form_data, "next_match": next_match_data}
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching fixtures: {e}")
+        return {"form": [], "next_match": None}

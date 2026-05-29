@@ -57,3 +57,96 @@ body {
   color: #888888;
   font-size: 0.85rem;
 }
+
+.navbar-search-container {
+  position: relative;
+  width: 300px;
+}
+
+.navbar-search-input {
+  background-color: #2b2b2b;
+  border: none;
+  color: #ffffff;
+  border-radius: 20px;
+  padding: 0.4rem 1rem 0.4rem 2.5rem;
+  width: 100%;
+}
+
+.navbar-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #aaaaaa;
+}
+
+/* The dropdown container */
+.search-results-dropdown {
+  display: none; /* Hidden by default */
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: #1c1c1c;
+  border: 1px solid #333;
+  border-radius: 8px;
+  margin-top: 5px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  color: #ffffff;
+  text-decoration: none;
+  border-bottom: 1px solid #2b2b2b;
+  transition: background-color 0.2s;
+}
+
+.search-result-item:hover {
+  background-color: #2b2b2b;
+  color: #ffffff;
+}
+
+.search-result-badge {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  margin-right: 15px;
+}
+
+.team-header-card {
+  background-color: #111111;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.nav-tabs-custom {
+  border-bottom: 1px solid #333;
+  margin-top: 20px;
+}
+
+.nav-tabs-custom .nav-link {
+  color: #aaaaaa;
+  border: none;
+  padding: 10px 15px;
+  font-weight: 500;
+}
+
+.nav-tabs-custom .nav-link.active {
+  color: #ffffff;
+  background: transparent;
+  border-bottom: 3px solid #0dcaf0; /* Cyan accent */
+}
+
+.widget-card {
+  background-color: #1c1c1c;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
