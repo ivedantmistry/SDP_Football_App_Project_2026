@@ -232,3 +232,25 @@ def get_team_fixtures(team_id):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching fixtures: {e}")
         return {"form": [], "next_match": None}
+
+
+def fetch_squad_from_api(team_id):
+    """Fetches the current roster for a team from API-Sports."""
+    if not API_KEY:
+        return []
+
+    url = "https://v3.football.api-sports.io/players/squads"
+    
+    try:
+        response = requests.get(url, headers=HEADERS, params={"team": team_id})
+        response.raise_for_status()
+        data = response.json()
+
+        if data.get("response"):
+            # The API returns a nested list of players for the team
+            return data["response"][0].get("players", [])
+        return []
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching squad: {e}")
+        return []

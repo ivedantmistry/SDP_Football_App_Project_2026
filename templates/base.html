@@ -1,212 +1,140 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Football Explorer</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.0/dist/cyborg/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-    <style>
-      .fotmob-search-input {
-        background-color: #2b2b2b !important;
-        border: 1px solid #2b2b2b !important;
-        color: #ffffff !important;
-        padding-left: 2.8rem !important;
-      }
-      .fotmob-search-input:focus {
-        background-color: #2b2b2b !important;
-        border-color: #444 !important;
-        box-shadow: none !important;
-      }
-      .fotmob-search-input::placeholder {
-        color: #999;
-      }
 
-      .search-icon-wrapper {
-        position: absolute;
-        left: 14px;
-        top: 45%;
-        transform: translateY(-50%);
-        color: #999;
-        pointer-events: none;
-        z-index: 10;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Football Explorer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.0/dist/cyborg/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    .fotmob-search-input {
+      background-color: #2b2b2b !important;
+      border: 1px solid #2b2b2b !important;
+      color: #ffffff !important;
+      padding-left: 2.8rem !important;
+    }
 
-      #searchDropdown {
-        background-color: #1e1e1e !important;
-        border: 1px solid #333 !important;
-        border-radius: 12px;
-      }
-      .custom-dropdown-item {
-        border-radius: 8px;
-        transition: background-color 0.2s;
-      }
-      .custom-dropdown-item:hover {
-        background-color: #2b2b2b !important;
-        color: white !important;
-      }
+    .fotmob-search-input:focus {
+      background-color: #2b2b2b !important;
+      border-color: #444 !important;
+      box-shadow: none !important;
+    }
 
-      #searchDropdown::-webkit-scrollbar {
-        width: 6px;
-      }
-      #searchDropdown::-webkit-scrollbar-thumb {
-        background: #555;
-        border-radius: 4px;
-      }
-    </style>
-  </head>
-  <body>
-    <nav
-      class="navbar navbar-expand-lg navbar-dark"
-      style="background-color: #111111; border-bottom: 1px solid #333"
-    >
-      <div class="container">
-        <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
-          ⚽ FotExplorer
-        </a>
+    .fotmob-search-input::placeholder {
+      color: #999;
+    }
 
-        <div class="position-relative ms-auto" style="width: 300px">
-          <form
-            action="/search"
-            method="POST"
-            class="d-flex position-relative"
-            autocomplete="off"
-          >
-            <div class="search-icon-wrapper">
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </div>
+    .search-icon-wrapper {
+      position: absolute;
+      left: 14px;
+      top: 45%;
+      transform: translateY(-50%);
+      color: #999;
+      pointer-events: none;
+      z-index: 10;
+    }
 
-            <input
-              class="form-control fotmob-search-input rounded-pill"
-              type="search"
-              name="search_query"
-              id="searchInput"
-              placeholder="Search"
-              aria-label="Search"
-            />
-          </form>
+    #searchDropdown {
+      background-color: #1e1e1e !important;
+      border: 1px solid #333 !important;
+      border-radius: 12px;
+    }
 
-          <div
-            id="searchDropdown"
-            class="dropdown-menu w-100 shadow-lg mt-2 p-2"
-            style="
+    .custom-dropdown-item {
+      border-radius: 8px;
+      transition: background-color 0.2s;
+    }
+
+    .custom-dropdown-item:hover {
+      background-color: #2b2b2b !important;
+      color: white !important;
+    }
+
+    #searchDropdown::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #searchDropdown::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #111111; border-bottom: 1px solid #333">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
+        ⚽ FotExplorer
+      </a>
+
+      <div class="position-relative ms-auto" style="width: 300px">
+        <form action="/search" method="POST" class="d-flex position-relative" autocomplete="off">
+          <div class="search-icon-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+
+          <input class="form-control fotmob-search-input rounded-pill" type="search" name="search_query"
+            id="searchInput" placeholder="Search" aria-label="Search" />
+        </form>
+
+        <div id="searchDropdown" class="dropdown-menu w-100 shadow-lg mt-2 p-2" style="
               display: none;
               position: absolute;
               top: 100%;
               z-index: 1000;
               max-height: 400px;
               overflow-y: auto;
-            "
-          ></div>
-        </div>
-
-        <div class="collapse navbar-collapse">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('index') }}">Home</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('dashboard') }}"
-                >Dashboard</a
-              >
-            </li>
-          </ul>
-        </div>
+            "></div>
       </div>
-    </nav>
 
-    <div class="container mt-4">{% block content %} {% endblock %}</div>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 
-    <script>
-      const searchInput = document.getElementById("live-search-input");
-      const dropdown = document.getElementById("search-dropdown");
+  <div class="container mt-4">{% block content %} {% endblock %}</div>
 
-      searchInput.addEventListener("input", function () {
-        const query = this.value.trim();
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const searchInput = document.getElementById("searchInput");
+      const searchDropdown = document.getElementById("searchDropdown");
+      let timeout = null;
 
-        if (query.length < 3) {
-          dropdown.style.display = "none";
-          return;
-        }
+      function renderDropdown(data, isHistory = false) {
+        searchDropdown.innerHTML = "";
 
-        fetch(`/api/search?q=${query}`)
-          .then((response) => response.json())
-          .then((data) => {
-            dropdown.innerHTML = ""; // Clear previous results
-
-            if (data.length > 0) {
-              data.forEach((team) => {
-                const link = document.createElement("a");
-                link.href = `/stadiums?team_name=${encodeURIComponent(team.name)}`;
-                link.className = "search-result-item";
-                link.innerHTML = `
-                                <img src="${team.badge}" class="search-result-badge" alt="badge">
-                                <div>
-                                    <div class="fw-bold">${team.name}</div>
-                                    <div style="font-size: 0.8rem; color: #888;">${team.stadium}</div>
-                                </div>
-                            `;
-                dropdown.appendChild(link);
-              });
-              dropdown.style.display = "block";
-            } else {
-              dropdown.style.display = "none";
-            }
-          })
-          .catch((err) => console.error(err));
-      });
-
-      // Hide dropdown when clicking outside
-      document.addEventListener("click", function (e) {
-        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
-          dropdown.style.display = "none";
-        }
-      });
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const searchInput = document.getElementById("searchInput");
-        const searchDropdown = document.getElementById("searchDropdown");
-        let timeout = null;
-
-        function renderDropdown(data, isHistory = false) {
-          searchDropdown.innerHTML = "";
-
-          if (data.length > 0) {
-            if (isHistory) {
-              searchDropdown.innerHTML = `
+        if (data.length > 0) {
+          if (isHistory) {
+            searchDropdown.innerHTML = `
                             <div class="d-flex justify-content-between align-items-center px-3 py-2 mb-2">
                                 <span class="text-white fw-bold" style="font-size: 1.1rem;">Recent</span>
                                 <span class="text-white fw-bold" style="font-size: 0.9rem; cursor: pointer;" id="clearHistoryBtn">Clear</span>
                             </div>
                         `;
-            }
+          }
 
-            data.forEach((team) => {
-              const itemWrapper = document.createElement("div");
-              itemWrapper.className =
-                "dropdown-item d-flex align-items-center py-2 mb-1 custom-dropdown-item bg-transparent";
+          data.forEach((team) => {
+            const itemWrapper = document.createElement("div");
+            itemWrapper.className =
+              "dropdown-item d-flex align-items-center py-2 mb-1 custom-dropdown-item bg-transparent";
 
-              itemWrapper.innerHTML = `
+            itemWrapper.innerHTML = `
                             <a href="/stadiums?team_name=${team.name}" class="d-flex align-items-center flex-grow-1 text-decoration-none search-team-link" style="min-width: 0;">
                                 <img src="${team.badge}" style="width: 32px; height: 32px; object-fit: contain;" class="me-3 flex-shrink-0">
                                 <div class="text-truncate">
@@ -215,9 +143,8 @@
                                 </div>
                             </a>
                             
-                            ${
-                              isHistory
-                                ? `
+                            ${isHistory
+                ? `
                             <div class="delete-history-btn ms-2 d-flex align-items-center justify-content-center flex-shrink-0" style="cursor: pointer; color: #999; width: 30px; height: 30px;" data-team="${team.name}">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -225,70 +152,71 @@
                                 </svg>
                             </div>
                             `
-                                : ""
-                            }
+                : ""
+              }
                         `;
 
-              const linkNode = itemWrapper.querySelector(".search-team-link");
-              linkNode.addEventListener("click", function (e) {
-                e.preventDefault();
-                fetch("/api/history", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    team_name: team.name,
-                    team_logo: team.badge,
-                  }),
-                }).then(() => (window.location.href = this.href));
-              });
-
-              if (isHistory) {
-                const deleteBtn = itemWrapper.querySelector(
-                  ".delete-history-btn",
-                );
-                deleteBtn.addEventListener("click", function (e) {
-                  e.stopPropagation();
-                  const teamToDelete = this.getAttribute("data-team");
-                  fetch("/api/history", {
-                    method: "DELETE",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ team_name: teamToDelete }),
-                  }).then(() => {
-                    searchInput.dispatchEvent(new Event("focus"));
-                  });
-                });
-              }
-
-              searchDropdown.appendChild(itemWrapper);
+            const linkNode = itemWrapper.querySelector(".search-team-link");
+            linkNode.addEventListener("click", function (e) {
+              e.preventDefault();
+              fetch("/api/history", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  team_name: team.name,
+                  team_logo: team.badge,
+                }),
+              }).then(() => (window.location.href = this.href));
             });
 
             if (isHistory) {
-              document
-                .getElementById("clearHistoryBtn")
-                .addEventListener("click", function (e) {
-                  e.stopPropagation();
-                  fetch("/api/history", {
-                    method: "DELETE",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({}),
-                  }).then(() => {
-                    searchDropdown.style.display = "none";
-                    searchDropdown.innerHTML = "";
-                  });
+              const deleteBtn = itemWrapper.querySelector(
+                ".delete-history-btn",
+              );
+              deleteBtn.addEventListener("click", function (e) {
+                e.stopPropagation();
+                const teamToDelete = this.getAttribute("data-team");
+                fetch("/api/history", {
+                  method: "DELETE",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ team_name: teamToDelete }),
+                }).then(() => {
+                  searchInput.dispatchEvent(new Event("focus"));
                 });
+              });
             }
 
-            searchDropdown.style.display = "block";
-          } else if (!isHistory) {
-            searchDropdown.innerHTML =
-              '<div class="p-3 text-muted text-center">No teams found.</div>';
-            searchDropdown.style.display = "block";
-          } else {
-            // Nếu đã xóa sạch lịch sử thì giấu khung dropdown đi
-            searchDropdown.style.display = "none";
+            searchDropdown.appendChild(itemWrapper);
+          });
+
+          if (isHistory) {
+            document
+              .getElementById("clearHistoryBtn")
+              .addEventListener("click", function (e) {
+                e.stopPropagation();
+                fetch("/api/history", {
+                  method: "DELETE",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({}),
+                }).then(() => {
+                  searchDropdown.style.display = "none";
+                  searchDropdown.innerHTML = "";
+                });
+              });
           }
+
+          searchDropdown.style.display = "block";
+        } else if (!isHistory) {
+          searchDropdown.innerHTML =
+            '<div class="p-3 text-muted text-center">No teams found.</div>';
+          searchDropdown.style.display = "block";
+        } else {
+          // Nếu đã xóa sạch lịch sử thì giấu khung dropdown đi
+          searchDropdown.style.display = "none";
         }
-      });
-    </script>
-  </body>
+      }
+    });
+  </script>
+</body>
+
 </html>

@@ -7,7 +7,6 @@ def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # 1. User Data (Dynamic/Personal)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS search_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -17,7 +16,6 @@ def init_db():
         )
     """)
 
-    # 2. Permanent Data: Venues (Stadiums)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS venues (
             venue_id INTEGER PRIMARY KEY,
@@ -28,7 +26,6 @@ def init_db():
         )
     """)
 
-    # 3. Permanent Data: Teams
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS teams (
             team_id INTEGER PRIMARY KEY,
@@ -39,6 +36,50 @@ def init_db():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS favorites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            team_id INTEGER UNIQUE,
+            FOREIGN KEY (team_id) REFERENCES teams (team_id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cached_matches (
+            match_id INTEGER PRIMARY KEY,
+            home_id INTEGER,
+            away_id INTEGER,
+            home_score INTEGER,
+            away_score INTEGER,
+            match_date TEXT,
+            match_time TEXT,
+            status TEXT,
+            league_name TEXT,
+            league_logo TEXT,
+            last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS leagues (
+            league_id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            country TEXT,
+            logo TEXT,
+            type TEXT
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS players (
+            player_id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            age INTEGER,
+            position TEXT,
+            photo TEXT,
+            team_id INTEGER,
+            FOREIGN KEY (team_id) REFERENCES teams (team_id)
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -126,3 +167,103 @@ def delete_search(team_name):
     cursor.execute("DELETE FROM search_history WHERE team_name = ?", (team_name,))
     conn.commit()
     conn.close()
+
+
+def search_local_teams(query_string):
+    """Searches the permanent local cache for matching teams and joins stadium info."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT t.name, t.logo, v.name 
+        FROM teams t
+        LEFT JOIN venues v ON t.venue_id = v.venue_id
+        WHERE t.name LIKE ?
+    """,
+        (f"%{query_string}%",),
+    )
+
+    rows = cursor.fetchall()
+    conn.close()
+    return [{"name": row[0], "badge": row[1], "stadium": row[2]} for row in rows]
+
+
+def insert_league(league_id, name, country, logo, league_type):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO leagues (league_id, name, country, logo, type)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(league_id) DO UPDATE SET
+        name=excluded.name, country=excluded.country, logo=excluded.logo, type=excluded.type
+    """,
+        (league_id, name, country, logo, league_type),
+    )
+    conn.commit()
+    conn.close()
+
+
+def insert_player(player_id, name, age, position, photo, team_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO players (player_id, name, age, position, photo, team_id)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(player_id) DO UPDATE SET
+        name=excluded.name, age=excluded.age, position=excluded.position, photo=excluded.photo, team_id=excluded.team_id
+    """,
+        (player_id, name, age, position, photo, team_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_team_players(team_id):
+    """Retrieves the roster for a specific team from the local cache."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT player_id, name, age, position, photo 
+        FROM players 
+        WHERE team_id = ?
+        ORDER BY position, name
+    """, (team_id,))
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    # Convert SQLite rows into a clean list of dictionaries for HTML
+    return [
+        {"id": row[0], "name": row[1], "age": row[2], "position": row[3], "photo": row[4]} 
+        for row in rows
+    ]
+
+def get_team_profile(team_name):
+    """Fetches full team and stadium details from the local DB for the Team Page."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT t.team_id, t.name, t.logo, v.name, v.city, v.capacity, v.surface
+        FROM teams t
+        LEFT JOIN venues v ON t.venue_id = v.venue_id
+        WHERE t.name = ?
+    """,
+        (team_name,),
+    )
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        return {
+            "id": row[0],
+            "name": row[1],
+            "badge_url": row[2],
+            "stadium_name": row[3] or "Unknown Stadium",
+            "stadium_location": row[4] or "Unknown Location",
+            "stadium_capacity": row[5] or "N/A",
+            "description": f"{row[1]} plays home matches at {row[3]}."
+        }
+    return None
