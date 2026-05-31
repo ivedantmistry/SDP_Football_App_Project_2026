@@ -6,6 +6,8 @@ DB_PATH = "fotmob.db"
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
+    # 1. User Data (Dynamic/Personal)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS search_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -14,6 +16,63 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """)
+
+    # 2. Permanent Data: Venues (Stadiums)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS venues (
+            venue_id INTEGER PRIMARY KEY,
+            name TEXT,
+            city TEXT,
+            capacity INTEGER,
+            surface TEXT
+        )
+    """)
+
+    # 3. Permanent Data: Teams
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS teams (
+            team_id INTEGER PRIMARY KEY,
+            name TEXT,
+            logo TEXT,
+            venue_id INTEGER,
+            FOREIGN KEY (venue_id) REFERENCES venues (venue_id)
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def insert_venue(venue_id, name, city, capacity, surface):
+    """Inserts or updates a stadium/venue."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO venues (venue_id, name, city, capacity, surface) 
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(venue_id) DO UPDATE SET
+        name=excluded.name, city=excluded.city, capacity=excluded.capacity, surface=excluded.surface
+    """,
+        (venue_id, name, city, capacity, surface),
+    )
+    conn.commit()
+    conn.close()
+
+
+def insert_team(team_id, name, logo, venue_id):
+    """Inserts or updates a team."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO teams (team_id, name, logo, venue_id) 
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(team_id) DO UPDATE SET
+        name=excluded.name, logo=excluded.logo, venue_id=excluded.venue_id
+    """,
+        (team_id, name, logo, venue_id),
+    )
     conn.commit()
     conn.close()
 
