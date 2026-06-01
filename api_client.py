@@ -13,7 +13,7 @@ HEADERS = {"x-apisports-key": API_KEY}
 
 
 def search_teams_list(query):
-
+    """Searches for teams matching the query and returns a list of results with dynamic descriptions."""
     url = "https://v3.football.api-sports.io/teams"
     querystring = {"search": query}
 
@@ -81,7 +81,7 @@ def get_exact_team(team_name):
 
 
 def get_team_fixtures(team_id):
-
+    """Fetches past and upcoming fixtures for a specific team, returning form and next match data."""
     if not API_KEY:
         return {"form": [], "next_match": None}
 
@@ -106,6 +106,7 @@ def get_team_fixtures(team_id):
         past_matches = []
         future_matches = []
 
+        # Categorize matches into past and future
         for match in fixtures_list:
             status = match["fixture"]["status"]["short"]
             if status in ["FT", "AET", "PEN"]:  # Finished
@@ -113,8 +114,8 @@ def get_team_fixtures(team_id):
             elif status in ["NS", "TBD"]:
                 future_matches.append(match)
 
+        # Sort past matches (most recent first) and get the last 5
         past_matches.sort(key=lambda x: x["fixture"]["timestamp"], reverse=True)
-        # Take the most recent 5, then reverse to chronological order for UI display
         last_5 = past_matches[:5][::-1]
 
         # Sort future matches by timestamp ascending (soonest first)
@@ -124,7 +125,7 @@ def get_team_fixtures(team_id):
         if not next_1 and len(past_matches) > 5:
             next_1 = past_matches[5]
 
-        # 4. Format Form Data for UI
+        # Format Form Data for UI
         form_data = []
         for match in last_5:
             home_team = match["teams"]["home"]
@@ -157,7 +158,7 @@ def get_team_fixtures(team_id):
                 }
             )
 
-        # 5. Format Next Match Data for UI
+        # Format Next Match Data for UI
         next_match_data = None
         if next_1:
             raw_date = next_1["fixture"]["date"]
@@ -172,6 +173,7 @@ def get_team_fixtures(team_id):
                 "away_logo": next_1["teams"]["away"]["logo"],
             }
 
+            # 6. Format All Matches List
             all_fixtures_data = []
         for match in fixtures_list:
             home_team = match["teams"]["home"]
@@ -271,7 +273,7 @@ def get_flag_url(country_name):
 
 
 def fetch_squad_from_api(team_id):
-    """Fetches the current roster for a team from API-Sports."""
+    """Fetches the current full roster for a team from API-Sports and groups them by position."""
     if not API_KEY:
         return []
 
@@ -286,6 +288,7 @@ def fetch_squad_from_api(team_id):
         total_pages = data.get("paging", {}).get("total", 1)
         players_data.extend(data.get("response", []))
 
+        # Fetch page 2 if squad is large (avoids N+1 query issue)
         if total_pages > 1:
             res2 = requests.get(
                 url,
@@ -301,9 +304,11 @@ def fetch_squad_from_api(team_id):
             "Attackers": [],
         }
 
+        # Process and extract specific player attributes
         for item in players_data:
             p_info = item.get("player", {})
 
+            # Extract number and position from statistics array
             pon = None
             pos = None
             for stat in item.get("statistics", []):
@@ -325,6 +330,7 @@ def fetch_squad_from_api(team_id):
                 "height": p_info.get("height"),
             }
 
+            # Group players based on their role
             if pos == "Goalkeeper":
                 grouped_squad["Goalkeepers"].append(player_dict)
             elif pos == "Defender":
@@ -334,6 +340,7 @@ def fetch_squad_from_api(team_id):
             elif pos == "Attacker":
                 grouped_squad["Attackers"].append(player_dict)
 
+        # Remove empty position groups
         return {k: v for k, v in grouped_squad.items() if len(v) > 0}
     except Exception as e:
         print(f"Error fetching squad data: {e}")
@@ -341,6 +348,7 @@ def fetch_squad_from_api(team_id):
 
 
 def get_team_coach(team_id):
+    """Fetches the current active manager/coach for a team from API-Sports."""
     if not API_KEY:
         return None
 
@@ -353,6 +361,7 @@ def get_team_coach(team_id):
         if data.get("response"):
             coaches_list = data["response"]
 
+            # Iterate through career history to find the active tenure (end date is None)
             for coach in coaches_list:
                 career_history = coach.get("career", [])
 
@@ -362,9 +371,66 @@ def get_team_coach(team_id):
                     if job_team_id == team_id and job.get("end") is None:
                         return coach
 
+            # Fallback to the first coach if no active tenure is strictly defined
             return coaches_list[0]
 
         return None
     except requests.exceptions.RequestException as e:
         print(f"Error fetching coach data: {e}")
         return None
+
+
+def get_league_fixtures(league_id, season=2024):
+    """Fetches ALL fixtures for a specific league and season for local pagination."""
+    if not API_KEY:
+        return []
+
+    url = "https://v3.football.api-sports.io/fixtures"
+    try:
+        # Fetch all fixtures for the league and season
+        res = requests.get(
+            url, headers=HEADERS, params={"league": league_id, "season": season}
+        )
+        res.raise_for_status()
+        data = res.json()
+
+        if data.get("errors"):
+            print(f"API Error (League Fixtures): {data['errors']}")
+            return []
+
+        return data.get("response", [])
+    except Exception as e:
+        print(f"Error fetching league fixtures: {e}")
+        return []
+
+
+def get_top_scorers(league_id, season=2024):
+    """Fetches the top scorers for a given league and season."""
+    if not API_KEY:
+        return []
+    url = "https://v3.football.api-sports.io/players/topscorers"
+    try:
+        res = requests.get(
+            url, headers=HEADERS, params={"league": league_id, "season": season}
+        )
+        res.raise_for_status()
+        data = res.json()
+
+        # Slice the top 5 records
+        scorers = data.get("response", [])[:5]
+        results = []
+        for s in scorers:
+            player = s.get("player", {})
+            stats = s.get("statistics", [{}])[0]
+            results.append(
+                {
+                    "name": player.get("name"),
+                    "photo": player.get("photo"),
+                    "goals": stats.get("goals", {}).get("total", 0),
+                    "team_logo": stats.get("team", {}).get("logo"),
+                }
+            )
+        return results
+    except Exception as e:
+        print(f"Error fetching top scorers: {e}")
+        return []
