@@ -234,23 +234,137 @@ def get_team_fixtures(team_id):
         return {"form": [], "next_match": None}
 
 
+def get_flag_url(country_name):
+    """Returns the URL of the flag image for a given country name."""
+    flags = {
+        "England": "gb-eng",
+        "France": "fr",
+        "Spain": "es",
+        "Germany": "de",
+        "Italy": "it",
+        "Brazil": "br",
+        "Argentina": "ar",
+        "Portugal": "pt",
+        "Netherlands": "nl",
+        "Belgium": "be",
+        "Denmark": "dk",
+        "United States": "us",
+        "Senegal": "sn",
+        "Uruguay": "uy",
+        "Colombia": "co",
+        "Switzerland": "ch",
+        "Croatia": "hr",
+        "Ukraine": "ua",
+        "Ecuador": "ec",
+        "Japan": "jp",
+        "Scotland": "gb-sct",
+        "Wales": "gb-wls",
+        "Norway": "no",
+        "Sweden": "se",
+        "Poland": "pl",
+        "Morocco": "ma",
+        "Ivory Coast": "ci",
+        "Ghana": "gh",
+    }
+    code = flags.get(country_name)
+    return f"https://flagcdn.com/w20/{code}.png" if code else None
+
+
 def fetch_squad_from_api(team_id):
     """Fetches the current roster for a team from API-Sports."""
     if not API_KEY:
         return []
 
-    url = "https://v3.football.api-sports.io/players/squads"
-    
+    url = "https://v3.football.api-sports.io/players"
+    players_data = []
+
+    try:
+        res = requests.get(
+            url, headers=HEADERS, params={"team": team_id, "season": 2024, "page": 1}
+        )
+        data = res.json()
+        total_pages = data.get("paging", {}).get("total", 1)
+        players_data.extend(data.get("response", []))
+
+        if total_pages > 1:
+            res2 = requests.get(
+                url,
+                headers=HEADERS,
+                params={"team": team_id, "season": 2024, "page": 2},
+            )
+            players_data.extend(res2.json().get("response", []))
+
+        grouped_squad = {
+            "Goalkeepers": [],
+            "Defenders": [],
+            "Midfielders": [],
+            "Attackers": [],
+        }
+
+        for item in players_data:
+            p_info = item.get("player", {})
+
+            pon = None
+            pos = None
+            for stat in item.get("statistics", []):
+                games = stat.get("games", {})
+                if games.get("number"):
+                    pon = games.get("number")
+                if games.get("position"):
+                    pos = games.get("position")
+
+            player_dict = {
+                "id": p_info.get("id"),
+                "name": p_info.get("name"),
+                "age": p_info.get("age"),
+                "number": pon,
+                "position": pos,
+                "photo": p_info.get("photo"),
+                "nationality": p_info.get("nationality"),
+                "flag_url": get_flag_url(p_info.get("nationality")),
+                "height": p_info.get("height"),
+            }
+
+            if pos == "Goalkeeper":
+                grouped_squad["Goalkeepers"].append(player_dict)
+            elif pos == "Defender":
+                grouped_squad["Defenders"].append(player_dict)
+            elif pos == "Midfielder":
+                grouped_squad["Midfielders"].append(player_dict)
+            elif pos == "Attacker":
+                grouped_squad["Attackers"].append(player_dict)
+
+        return {k: v for k, v in grouped_squad.items() if len(v) > 0}
+    except Exception as e:
+        print(f"Error fetching squad data: {e}")
+        return {}
+
+
+def get_team_coach(team_id):
+    if not API_KEY:
+        return None
+
+    url = "https://v3.football.api-sports.io/coachs"
     try:
         response = requests.get(url, headers=HEADERS, params={"team": team_id})
         response.raise_for_status()
         data = response.json()
 
         if data.get("response"):
-            # The API returns a nested list of players for the team
-            return data["response"][0].get("players", [])
-        return []
-            
+            coaches_list = data["response"]
+
+            for coach in coaches_list:
+                career_history = coach.get("career", [])
+
+                for job in career_history:
+                    job_team_id = job.get("team", {}).get("id")
+
+                    if job_team_id == team_id and job.get("end") is None:
+                        return coach
+
+            return coaches_list[0]
+
+        return None
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching squad: {e}")
-        return []
+        print(f"Error fetching coach data: {e}")
+        return None
