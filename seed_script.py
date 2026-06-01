@@ -83,11 +83,11 @@ if __name__ == "__main__":
     db_manager.init_db()
 
     leagues_to_seed = [
-        39,  # Premier League/
-        78,  # Bundesliga
-        140, # La Liga
-        135, # Serie A
-        61,  # Ligue 1
+        # 39,  # Premier League/
+        # 78,  # Bundesliga
+        # 140, # La Liga
+        # 135, # Serie A
+        # 61,  # Ligue 1
         2,   # UEFA Champions League
         3,   # UEFA Europa League
     ]

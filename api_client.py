@@ -4,7 +4,6 @@ import requests
 import os
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 API_KEY = os.getenv("API_SPORTS_KEY")
@@ -368,3 +367,48 @@ def get_team_coach(team_id):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching coach data: {e}")
         return None
+
+
+def get_league_standings(team_id):
+    """Fetches the live league standings (table) for the team's current league."""
+    if not API_KEY:
+        return []
+
+    url = "https://v3.football.api-sports.io/standings"
+    try:
+        res = requests.get(
+            url, headers=HEADERS, params={"team": team_id, "season": 2024}
+        )
+        res.raise_for_status()
+        data = res.json()
+
+        if data.get("response"):
+            league_data = data["response"][0]["league"]
+            standings = league_data["standings"][0]
+
+            formatted_standings = []
+            for row in standings:
+                formatted_standings.append(
+                    {
+                        "rank": row.get("rank"),
+                        "team_id": row["team"]["id"],
+                        "team_name": row["team"]["name"],
+                        "team_logo": row["team"]["logo"],
+                        "played": row["all"]["played"],
+                        "win": row["all"]["win"],
+                        "draw": row["all"]["draw"],
+                        "lose": row["all"]["lose"],
+                        "goals_for": row["all"]["goals"]["for"],
+                        "goals_against": row["all"]["goals"]["against"],
+                        "goals_diff": row["goalsDiff"],
+                        "points": row["points"],
+                        "form": list(
+                            row.get("form", "")
+                        ),  
+                    }
+                )
+            return formatted_standings
+        return []
+    except Exception as e:
+        print(f"Error fetching standings: {e}")
+        return []

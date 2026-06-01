@@ -5,6 +5,7 @@ from api_client import (
     get_team_fixtures,
     search_teams_list,
     get_exact_team,
+    get_league_standings
 )
 import db_manager
 
@@ -81,6 +82,7 @@ def stadiums():
     if team_data:
         team_id = team_data["id"]
         fixtures_data = get_team_fixtures(team_id)
+        standings_data = get_league_standings(team_id)
 
         coach_data = db_manager.get_team_coach_local(team_id)
         if not coach_data:
@@ -147,6 +149,7 @@ def stadiums():
             fixtures=fixtures_data,
             squad=final_squad,
             coach=coach_data,
+            standings=standings_data
         )
     else:
         return f"<body style='background-color: #000; color: #fff; text-align: center;'><h1>Team '{team_query}' not found.</h1><a href='/' style='color: #fff;'>Try again</a></body>"
