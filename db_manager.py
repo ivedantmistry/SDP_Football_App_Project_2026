@@ -74,9 +74,24 @@ def init_db():
             player_id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             age INTEGER,
+            number INTEGER,
             position TEXT,
             photo TEXT,
-            team_id INTEGER,
+            nationality TEXT,
+            flag_url TEXT,
+            height TEXT,
+            team_id INTEGER
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS coaches (
+            coach_id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            age INTEGER,
+            nationality TEXT,
+            photo TEXT,
+            team_id INTEGER UNIQUE,
             FOREIGN KEY (team_id) REFERENCES teams (team_id)
         )
     """)
@@ -204,41 +219,72 @@ def insert_league(league_id, name, country, logo, league_type):
     conn.close()
 
 
-def insert_player(player_id, name, age, position, photo, team_id):
+def insert_player(
+    player_id,
+    name,
+    age,
+    number,
+    position,
+    photo,
+    nationality,
+    flag_url,
+    height,
+    team_id,
+):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO players (player_id, name, age, position, photo, team_id)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO players (player_id, name, age, number, position, photo, nationality, flag_url, height, team_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(player_id) DO UPDATE SET
-        name=excluded.name, age=excluded.age, position=excluded.position, photo=excluded.photo, team_id=excluded.team_id
+        name=excluded.name, age=excluded.age, number=excluded.number, position=excluded.position, photo=excluded.photo, nationality=excluded.nationality, flag_url=excluded.flag_url, height=excluded.height, team_id=excluded.team_id
     """,
-        (player_id, name, age, position, photo, team_id),
+        (
+            player_id,
+            name,
+            age,
+            number,
+            position,
+            photo,
+            nationality,
+            flag_url,
+            height,
+            team_id,
+        ),
     )
     conn.commit()
     conn.close()
 
 
 def get_team_players(team_id):
-    """Retrieves the roster for a specific team from the local cache."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT player_id, name, age, position, photo 
-        FROM players 
-        WHERE team_id = ?
-        ORDER BY position, name
-    """, (team_id,))
-    
+    cursor.execute(
+        """
+        SELECT player_id, name, age, number, position, photo, nationality, flag_url, height 
+        FROM players WHERE team_id = ? ORDER BY position, name
+    """,
+        (team_id,),
+    )
     rows = cursor.fetchall()
     conn.close()
-    
-    # Convert SQLite rows into a clean list of dictionaries for HTML
+
     return [
-        {"id": row[0], "name": row[1], "age": row[2], "position": row[3], "photo": row[4]} 
-        for row in rows
+        {
+            "id": r[0],
+            "name": r[1],
+            "age": r[2],
+            "number": r[3],
+            "position": r[4],
+            "photo": r[5],
+            "nationality": r[6],
+            "flag_url": r[7],
+            "height": r[8],
+        }
+        for r in rows
     ]
+
 
 def get_team_profile(team_name):
     """Fetches full team and stadium details from the local DB for the Team Page."""
@@ -264,6 +310,47 @@ def get_team_profile(team_name):
             "stadium_name": row[3] or "Unknown Stadium",
             "stadium_location": row[4] or "Unknown Location",
             "stadium_capacity": row[5] or "N/A",
-            "description": f"{row[1]} plays home matches at {row[3]}."
+            "description": f"{row[1]} plays home matches at {row[3]}.",
+        }
+    return None
+
+
+def insert_coach(coach_id, name, age, nationality, photo, team_id):
+    """Lưu thông tin HLV vào database cục bộ."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO coaches (coach_id, name, age, nationality, photo, team_id)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(coach_id) DO UPDATE SET
+        name=excluded.name, age=excluded.age, nationality=excluded.nationality, photo=excluded.photo, team_id=excluded.team_id
+    """,
+        (coach_id, name, age, nationality, photo, team_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_team_coach_local(team_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT name, age, nationality, photo 
+        FROM coaches 
+        WHERE team_id = ?
+    """,
+        (team_id,),
+    )
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        return {
+            "name": row[0],
+            "age": row[1],
+            "nationality": row[2],
+            "photo": row[3],
         }
     return None

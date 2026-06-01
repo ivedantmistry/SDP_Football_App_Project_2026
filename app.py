@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, render_template, request, redirect, url_for
 from api_client import (
     fetch_squad_from_api,
+    get_team_coach,
     get_team_fixtures,
     search_teams_list,
     get_exact_team,
@@ -65,6 +66,7 @@ def matches():
     return render_template("base.html", content="Matches Page Placeholder")
 
 
+# 4. Stadium & Team Details View
 @app.route("/stadiums")
 def stadiums():
     """Displays team details, stadium information, and dynamically loads the squad."""
@@ -72,35 +74,79 @@ def stadiums():
     if not team_query:
         return redirect(url_for("index"))
 
-    # 1. Use DB_MANAGER to get the permanent team details instantly
     team_data = db_manager.get_team_profile(team_query)
+    if not team_data:
+        team_data = get_exact_team(team_query)
 
     if team_data:
-        # ... (keep the rest of your fixtures and lazy-loading logic exactly the same)
-        fixtures_data = get_team_fixtures(team_data["id"])
-
         team_id = team_data["id"]
+        fixtures_data = get_team_fixtures(team_id)
+
+        coach_data = db_manager.get_team_coach_local(team_id)
+        if not coach_data:
+            api_coach = get_team_coach(team_id)
+            if api_coach:
+                db_manager.insert_coach(
+                    coach_id=api_coach.get("id"),
+                    name=api_coach.get("name"),
+                    age=api_coach.get("age"),
+                    nationality=api_coach.get("nationality"),
+                    photo=api_coach.get("photo"),
+                    team_id=team_id,
+                )
+                coach_data = db_manager.get_team_coach_local(team_id)
+
         players = db_manager.get_team_players(team_id)
 
         if not players:
             print(f"Squad not in database. Fetching from API for Team ID: {team_id}...")
-            api_players = fetch_squad_from_api(team_id)
+            api_players_dict = fetch_squad_from_api(team_id)
 
-            for p in api_players:
-                db_manager.insert_player(
-                    player_id=p.get("id"),
-                    name=p.get("name"),
-                    age=p.get("age"),
-                    position=p.get("position"),
-                    photo=p.get("photo"),
-                    team_id=team_id,
-                )
-            players = db_manager.get_team_players(team_id)
+            if api_players_dict:
+                for position_group, player_list in api_players_dict.items():
+                    for p in player_list:
+                        db_manager.insert_player(
+                            player_id=p.get("id"),
+                            name=p.get("name"),
+                            age=p.get("age"),
+                            number=p.get("number"),
+                            position=p.get("position"),
+                            photo=p.get("photo"),
+                            nationality=p.get("nationality"),
+                            flag_url=p.get("flag_url"),
+                            height=p.get("height"),
+                            team_id=team_id,
+                        )
+                players = db_manager.get_team_players(team_id)
         else:
             print(f"Loaded {len(players)} players directly from local database!")
 
+        grouped_squad = {
+            "Goalkeepers": [],
+            "Defenders": [],
+            "Midfielders": [],
+            "Attackers": [],
+        }
+        for p in players:
+            pos = p.get("position") if isinstance(p, dict) else p[4]
+
+            if pos == "Goalkeeper":
+                grouped_squad["Goalkeepers"].append(p)
+            elif pos == "Defender":
+                grouped_squad["Defenders"].append(p)
+            elif pos == "Midfielder":
+                grouped_squad["Midfielders"].append(p)
+            elif pos == "Attacker":
+                grouped_squad["Attackers"].append(p)
+
+        final_squad = {k: v for k, v in grouped_squad.items() if len(v) > 0}
+
         return render_template(
-            "team.html", team=team_data, fixtures=fixtures_data, players=players
+            "team.html",
+            team=team_data,
+            fixtures=fixtures_data,
+            squad=final_squad,
+            coach=coach_data,
         )
     else:
         return f"<body style='background-color: #000; color: #fff; text-align: center;'><h1>Team '{team_query}' not found.</h1><a href='/' style='color: #fff;'>Try again</a></body>"
@@ -108,12 +154,25 @@ def stadiums():
 
 @app.route("/api/search")
 def api_search():
-    """Returns a JSON list of teams directly from the local SQLite cache."""
+    """Returns a JSON list of teams for the navbar dropdown."""
     query = request.args.get("q", "")
-    if not query or len(query) < 1:
+    if not query or len(query) < 3:
         return jsonify([])
 
     results = db_manager.search_local_teams(query)
+
+    if not results:
+        teams_data = search_teams_list(query)
+        results = []
+        for team in teams_data:
+            results.append(
+                {
+                    "name": team["name"],
+                    "badge": team["badge_url"],
+                    "stadium": team["stadium_name"],
+                }
+            )
+
     return jsonify(results)
 
 
