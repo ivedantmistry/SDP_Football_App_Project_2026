@@ -354,3 +354,15 @@ def get_team_coach_local(team_id):
             "photo": row[3],
         }
     return None
+
+
+def get_all_leagues():
+    """Lấy danh sách các giải đấu đã được lưu từ Seed."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    # Sắp xếp theo tên cho gọn gàng
+    cursor.execute("SELECT league_id, name, logo, country FROM leagues ORDER BY name")
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [{"id": r[0], "name": r[1], "logo": r[2], "country": r[3]} for r in rows]
