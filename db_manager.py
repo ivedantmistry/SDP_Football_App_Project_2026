@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime, timedelta
 
 DB_PATH = "fotmob.db"
 
@@ -366,3 +367,33 @@ def get_all_leagues():
     conn.close()
 
     return [{"id": r[0], "name": r[1], "logo": r[2], "country": r[3]} for r in rows]
+
+
+def is_matches_cache_valid(league_name, hours_valid=24):
+    """
+    Checks if the local match data is fresh enough.
+    Returns True if data is fresh, False if we need to call the API.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT last_updated FROM cached_matches 
+        WHERE league_name = ? 
+        ORDER BY last_updated DESC LIMIT 1
+    """,
+        (league_name,),
+    )
+
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        return False
+
+    last_updated_string = row[0]
+    last_updated = datetime.strptime(last_updated_string, "%Y-%m-%d %H:%M:%S")
+    expiration_time = last_updated + timedelta(hours=hours_valid)
+
+    return datetime.now() < expiration_time
