@@ -371,6 +371,7 @@ def get_top_scorers(league_id, season=2024):
                 "photo": player.get("photo"),
                 "goals": stats.get("goals", {}).get("total", 0),
                 "team_logo": stats.get("team", {}).get("logo"),
+                "team_name": stats.get("team", {}).get("name", "Unknown"),
             }
         )
     return results

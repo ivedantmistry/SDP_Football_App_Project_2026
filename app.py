@@ -1,15 +1,16 @@
+from datetime import datetime
 import re
 import time
 from flask import Flask, jsonify, render_template, request, redirect, url_for
 from api_client import (
     fetch_squad_from_api,
-    get_league_fixtures,
     get_team_coach,
     get_team_fixtures,
     get_top_scorers,
     search_teams_list,
     get_exact_team,
 )
+from football_api_manager import api_manager
 import db_manager
 
 app = Flask(__name__)
@@ -53,8 +54,13 @@ def index():
         < CACHE_DURATION
     ):
         all_matches = CACHE["fixtures_by_league"][cache_key_league]["data"]
+    # Sửa từ: all_matches = get_league_fixtures(current_league_id)
+    # Thành thế này:
     else:
-        all_matches = get_league_fixtures(current_league_id)
+        all_matches = api_manager.get_league_fixtures(current_league_id)
+
+        # all_matches = api_manager.get_league_fixtures(current_league_id)
+
         if all_matches:
             CACHE["fixtures_by_league"][cache_key_league] = {
                 "data": all_matches,
@@ -115,6 +121,27 @@ def index():
     else:
         display_round = "No Matches"
 
+    round_dates = ""
+    if round_matches:
+        dates = [
+            m["fixture"]["date"] for m in round_matches if m["fixture"].get("date")
+        ]
+        if dates:
+            start_date_str = min(dates)[:10]
+            end_date_str = max(dates)[:10]
+            try:
+                start_date = datetime.strptime(start_date_str, "%Y-%m-%d").strftime(
+                    "%b %d"
+                )
+                end_date = datetime.strptime(end_date_str, "%Y-%m-%d").strftime("%b %d")
+                round_dates = (
+                    start_date
+                    if start_date == end_date
+                    else f"{start_date} - {end_date}"
+                )
+            except ValueError:
+                pass
+
     # Check if cached top scorers data is available for the selected league
     # Using league_id as the cache key for top scorers since they are typically league-specific
     cache_key_scorers = str(current_league_id)
@@ -124,6 +151,9 @@ def index():
         top_scorers = CACHE["scorers"][cache_key_scorers]["data"]
     else:
         top_scorers = get_top_scorers(current_league_id)
+
+        # top_scorers = api_manager.get_top_scorers(current_league_id)
+
         if top_scorers:
             CACHE["scorers"][cache_key_scorers] = {
                 "data": top_scorers,
@@ -142,6 +172,7 @@ def index():
         display_round=display_round,
         prev_round=prev_round,
         next_round=next_round,
+        round_dates=round_dates,
     )
 
 
@@ -208,14 +239,21 @@ def stadiums():
     if not team_data:
         team_data = get_exact_team(team_query)
 
+        # team_data = api_manager.get_exact_team(team_query)
+
     if team_data:
         team_id = team_data["id"]
         fixtures_data = get_team_fixtures(team_id)
+
+        # fixtures_data = api_manager.get_team_fixtures(team_id)
 
         # Coach Lazy Loading Logic
         coach_data = db_manager.get_team_coach_local(team_id)
         if not coach_data:
             api_coach = get_team_coach(team_id)
+
+            # api_coach = api_manager.get_team_coach(team_id)
+
             if api_coach:
                 db_manager.insert_coach(
                     coach_id=api_coach.get("id"),
@@ -232,6 +270,8 @@ def stadiums():
         if not players:
             print(f"Squad not in database. Fetching from API for Team ID: {team_id}...")
             api_players_dict = fetch_squad_from_api(team_id)
+
+            # api_players_dict = api_manager.fetch_squad_from_api(team_id)
 
             if api_players_dict:
                 for position_group, player_list in api_players_dict.items():
@@ -299,6 +339,9 @@ def api_search():
     # Fallback to Live API if not found locally
     if not results:
         teams_data = search_teams_list(query)
+
+        # teams_data = api_manager.search_teams_list(query)
+
         results = []
         for team in teams_data:
             results.append(
