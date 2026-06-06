@@ -12,13 +12,14 @@ from api_client import (
 )
 from football_api_manager import api_manager
 import db_manager
+import folium
+from geopy.geocoders import Nominatim
+from urllib.parse import quote
 
 app = Flask(__name__)
 
-# Initialize the SQLite database tables
 db_manager.init_db()
 
-# Prevents excessive API calls for Home Page dynamic data
 CACHE = {
     "fixtures_by_league": {},
     "scorers": {},
@@ -32,7 +33,6 @@ def index():
     leagues = db_manager.get_all_leagues()
     current_time = time.time()
 
-    # Get league_id from query parameters, default to 39 (Premier League) if not provided or invalid
     league_id_str = request.args.get("league_id", "39")
     try:
         current_league_id = int(league_id_str)
@@ -47,7 +47,6 @@ def index():
             current_league_logo = ls["logo"]
             break
 
-    # Check if cached data is available for the selected league
     cache_key_league = f"all_fixtures_{current_league_id}"
     if cache_key_league in CACHE["fixtures_by_league"] and (
         current_time - CACHE["fixtures_by_league"][cache_key_league]["timestamp"]
@@ -226,7 +225,6 @@ def matches():
     return render_template("base.html", content="Matches Page Placeholder")
 
 
-# 4. Stadium & Team Details View
 @app.route("/stadiums")
 def stadiums():
     """Displays team details, stadium information, and dynamically loads the squad."""
@@ -254,12 +252,9 @@ def stadiums():
             if league_counts:
                 team_league_id = max(league_counts, key=league_counts.get)
 
-        # Coach Lazy Loading Logic
         coach_data = db_manager.get_team_coach_local(team_id)
         if not coach_data:
             api_coach = get_team_coach(team_id)
-
-            # api_coach = api_manager.get_team_coach(team_id)
 
             if api_coach:
                 db_manager.insert_coach(
@@ -271,14 +266,10 @@ def stadiums():
                     team_id=team_id,
                 )
                 coach_data = db_manager.get_team_coach_local(team_id)
-
-        # Squad Lazy Loading Logic
         players = db_manager.get_team_players(team_id)
         if not players:
             print(f"Squad not in database. Fetching from API for Team ID: {team_id}...")
             api_players_dict = fetch_squad_from_api(team_id)
-
-            # api_players_dict = api_manager.fetch_squad_from_api(team_id)
 
             if api_players_dict:
                 for position_group, player_list in api_players_dict.items():
@@ -333,6 +324,16 @@ def stadiums():
             standings_data = get_league_standings(team_id)
             if standings_data:
                 db_manager.save_cached_api_data(cache_key_standings, standings_data)
+        stadium_map_html = get_stadium_map_html(
+            team_data["stadium_name"], team_data["stadium_location"]
+        )
+
+        destination_query = quote(
+            f"{team_data['stadium_name']}, {team_data['stadium_location']}"
+        )
+        directions_url = (
+            f"https://www.google.com/maps/dir/?api=1&destination={destination_query}"
+        )
 
         return render_template(
             "team.html",
@@ -342,6 +343,8 @@ def stadiums():
             coach=coach_data,
             is_favorite=is_fav,
             standings=standings_data,
+            stadium_map=stadium_map_html,
+            directions_url=directions_url,
         )
     else:
         return f"<body style='background-color: #000; color: #fff; text-align: center;'><h1>Team '{team_query}' not found.</h1><a href='/' style='color: #fff;'>Try again</a></body>"
@@ -484,3 +487,38 @@ def api_toggle_favorite():
 
     is_fav = db_manager.toggle_favorite(team_id, team_name, team_logo)
     return jsonify({"success": True, "is_favorite": is_fav})
+
+
+def get_stadium_map_html(stadium_name, city):
+    """Geocodes the stadium and returns a dark-mode Folium map as an HTML string."""
+    geolocator = Nominatim(user_agent="fotmob_clone_app")
+
+    try:
+        # Try finding the exact stadium first
+        location = geolocator.geocode(f"{stadium_name}, {city}")
+        if not location:
+            # Fallback to just the city if stadium isn't found
+            location = geolocator.geocode(city)
+
+        if location:
+            lat, lon = location.latitude, location.longitude
+        else:
+            # Default to London if all geocoding fails
+            lat, lon = 51.5074, -0.1278
+
+        # Create Folium Map using a dark theme that matches your UI!
+        m = folium.Map(location=[lat, lon], zoom_start=15, tiles="CartoDB dark_matter")
+
+        # Add a marker
+        folium.Marker(
+            [lat, lon],
+            tooltip=stadium_name,
+            icon=folium.Icon(color="blue", icon="info-sign"),
+        ).add_to(m)
+
+        # Convert the map to an HTML string that Flask can render
+        return m._repr_html_()
+
+    except Exception as e:
+        print(f"Geocoding error: {e}")
+        return "<div class='text-center text-muted p-4'>Map currently unavailable</div>"
