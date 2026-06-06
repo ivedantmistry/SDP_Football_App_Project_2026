@@ -1,4 +1,5 @@
 import sqlite3
+import json
 from datetime import datetime, timedelta
 
 DB_PATH = "fotmob.db"
@@ -96,6 +97,15 @@ def init_db():
             FOREIGN KEY (team_id) REFERENCES teams (team_id)
         )
     """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS endpoint_cache (
+            endpoint_key TEXT PRIMARY KEY,
+            json_data TEXT,
+            last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
     conn.commit()
     conn.close()
 
@@ -398,34 +408,40 @@ def is_matches_cache_valid(league_name, hours_valid=24):
 
     return datetime.now() < expiration_time
 
+
 def toggle_favorite(team_id, team_name, team_logo):
     """Toggles a team in the favorites table. Inserts team if it doesn't exist."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    
+
     # Check if it's already a favorite
     cursor.execute("SELECT id FROM favorites WHERE team_id = ?", (team_id,))
     row = cursor.fetchone()
-    
+
     if row:
         # Remove from favorites
         cursor.execute("DELETE FROM favorites WHERE team_id = ?", (team_id,))
         is_fav = False
     else:
         # Ensure team exists in teams table first (minimal info)
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO teams (team_id, name, logo, venue_id) 
             VALUES (?, ?, ?, NULL)
             ON CONFLICT(team_id) DO UPDATE SET name=excluded.name, logo=excluded.logo
-        """, (team_id, team_name, team_logo))
-        
+        """,
+            (team_id, team_name, team_logo),
+        )
+
         # Add to favorites
         cursor.execute("INSERT INTO favorites (team_id) VALUES (?)", (team_id,))
         is_fav = True
-        
+
     conn.commit()
     conn.close()
     return is_fav
+
+
 
 def is_favorite(team_id):
     """Checks if a specific team is marked as favorite."""
@@ -435,6 +451,7 @@ def is_favorite(team_id):
     row = cursor.fetchone()
     conn.close()
     return bool(row)
+
 
 def get_all_favorites():
     """Retrieves all favorite teams to display on the dashboard."""
@@ -449,3 +466,50 @@ def get_all_favorites():
     rows = cursor.fetchall()
     conn.close()
     return [{"id": r[0], "name": r[1], "logo": r[2]} for r in rows]
+
+
+def get_cached_api_data(endpoint_key, hours_valid=24):
+    """Fetches JSON data from SQLite if it is less than 'hours_valid' old."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    # We use a try-except here just in case the table hasn't been created yet
+    try:
+        cursor.execute(
+            "SELECT json_data, last_updated FROM endpoint_cache WHERE endpoint_key = ?",
+            (endpoint_key,),
+        )
+        row = cursor.fetchone()
+    except sqlite3.OperationalError:
+        conn.close()
+        return None
+
+    conn.close()
+
+    if not row:
+        return None
+
+    last_updated = datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S")
+    if datetime.now() < last_updated + timedelta(hours=hours_valid):
+        return json.loads(row[0])  # Data is fresh, return it
+
+    return None  # Data is expired or missing
+
+
+
+def save_cached_api_data(endpoint_key, data):
+    """Saves fresh API JSON data into SQLite."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    json_string = json.dumps(data)
+    cursor.execute(
+        """
+        INSERT INTO endpoint_cache (endpoint_key, json_data, last_updated)
+        VALUES (?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(endpoint_key) DO UPDATE SET
+        json_data=excluded.json_data, last_updated=CURRENT_TIMESTAMP
+    """,
+        (endpoint_key, json_string),
+    )
+    conn.commit()
+    conn.close()

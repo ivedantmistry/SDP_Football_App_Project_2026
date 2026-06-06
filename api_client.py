@@ -375,3 +375,48 @@ def get_top_scorers(league_id, season=2024):
             }
         )
     return results
+
+
+def get_league_standings(team_id, season=2024):
+    """Fetches the complete league standings table for the league the team plays in."""
+    initial_data = _make_api_request("standings", {"team": team_id, "season": season})
+
+    if not initial_data or not isinstance(initial_data, list) or len(initial_data) == 0:
+        return []
+
+    try:
+        league_id = initial_data[0].get("league", {}).get("id")
+        if not league_id:
+            return []
+
+        full_league_data = _make_api_request(
+            "standings", {"league": league_id, "season": season}
+        )
+        if not full_league_data:
+            return []
+
+        standings = full_league_data[0]["league"]["standings"][0]
+
+        formatted_standings = []
+        for row in standings:
+            formatted_standings.append(
+                {
+                    "rank": row.get("rank"),
+                    "team_id": row["team"]["id"],
+                    "team_name": row["team"]["name"],
+                    "team_logo": row["team"]["logo"],
+                    "played": row["all"]["played"],
+                    "win": row["all"]["win"],
+                    "draw": row["all"]["draw"],
+                    "lose": row["all"]["lose"],
+                    "goals_for": row["all"]["goals"]["for"],
+                    "goals_against": row["all"]["goals"]["against"],
+                    "goals_diff": row["goalsDiff"],
+                    "points": row["points"],
+                    "form": list(row.get("form", "")),
+                }
+            )
+        return formatted_standings
+    except (IndexError, KeyError) as e:
+        print(f"[API Error] Error parsing full standings data: {e}")
+        return []

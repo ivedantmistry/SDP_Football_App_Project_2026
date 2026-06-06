@@ -1,66 +1,44 @@
-{% extends "base.html" %} 
+{% extends "base.html" %}
 {% block content %}
-<div class="team-header-card">
+<div class="team-header-card" style="--team-color: {{ team_color | default('#1e1e1e', true) }};
+            background-color: var(--team-color);">
   <div class="d-flex justify-content-between align-items-center">
-    
+
     <div class="d-flex align-items-center">
-      <img
-        src="{{ team.badge_url }}"
-        alt="{{ team.name }}"
-        style="width: 80px; height: 80px; object-fit: contain"
-        class="me-4"
-      />
+      <img src="{{ team.badge_url }}" alt="{{ team.name }}" style="width: 80px; height: 80px; object-fit: contain"
+        class="me-4" />
       <div>
         <h1 class="mb-0 fw-bold">{{ team.name }}</h1>
         <span class="text-muted">{{ team.stadium_location }}</span>
       </div>
     </div>
-   <button id="favoriteBtn" 
-            class="btn {% if is_favorite %}btn-light{% else %}btn-outline-light{% endif %} rounded-pill px-4 fw-bold"
-            data-team-id="{{ team.id }}"
-            data-team-name="{{ team.name }}"
-            data-team-logo="{{ team.badge_url }}">
+    <button id="favoriteBtn"
+      class="btn {% if is_favorite %}btn-light{% else %}btn-outline-light{% endif %} rounded-pill px-4 fw-bold"
+      data-team-id="{{ team.id }}" data-team-name="{{ team.name }}" data-team-logo="{{ team.badge_url }}">
       {% if is_favorite %}Unfollow{% else %}Follow{% endif %}
     </button>
   </div>
 
   <ul class="nav nav-tabs-custom d-flex mt-4" id="teamTabs" role="tablist">
     <li class="nav-item" role="presentation">
-      <button
-        class="nav-link active"
-        id="overview-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#overview"
-        type="button"
-        role="tab"
-      >
+      <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button"
+        role="tab">
         Overview
       </button>
     </li>
-    <li class="nav-item">
-      <a class="nav-link" href="#">Table</a>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="table-tab" data-bs-toggle="tab" data-bs-target="#table" type="button" role="tab">
+        Table
+      </button>
     </li>
     <li class="nav-item" role="presentation">
-      <button
-        class="nav-link"
-        id="fixtures-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#fixtures"
-        type="button"
-        role="tab"
-      >
+      <button class="nav-link" id="fixtures-tab" data-bs-toggle="tab" data-bs-target="#fixtures" type="button"
+        role="tab">
         Fixtures
       </button>
     </li>
     <li class="nav-item" role="presentation">
-      <button
-        class="nav-link"
-        id="squad-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#squad"
-        type="button"
-        role="tab"
-      >
+      <button class="nav-link" id="squad-tab" data-bs-toggle="tab" data-bs-target="#squad" type="button" role="tab">
         Squad
       </button>
     </li>
@@ -73,29 +51,20 @@
       <div class="col-md-7">
         <div class="row mb-4">
           <div class="col-md-6 mb-3 mb-md-0">
-            <div
-              class="widget-card h-100 d-flex flex-column"
-              style="overflow: hidden"
-            >
+            <div class="widget-card h-100 d-flex flex-column" style="overflow: hidden">
               <h6 class="fw-bold mb-3 text-white">Team form</h6>
 
-              <div
-                class="d-flex justify-content-between align-items-center my-auto w-100 px-1"
-              >
+              <div class="d-flex justify-content-between align-items-center my-auto w-100 px-1">
                 {% for match in fixtures.form %}
                 <div class="text-center">
                   <div
                     class="badge rounded-pill mb-3 px-2 py-2 {% if match.result == 'W' %}bg-success {% elif match.result == 'D' %}bg-secondary {% else %}bg-danger{% endif %}"
-                    style="font-size: 0.95rem; min-width: 48px"
-                  >
+                    style="font-size: 0.95rem; min-width: 48px">
                     {{ match.score }}
                   </div>
                   <div>
-                    <img
-                      src="{{ match.opponent_logo }}"
-                      alt="Opp"
-                      style="width: 32px; height: 32px; object-fit: contain"
-                    />
+                    <img src="{{ match.opponent_logo }}" alt="Opp"
+                      style="width: 32px; height: 32px; object-fit: contain" />
                   </div>
                 </div>
                 {% endfor %}
@@ -105,55 +74,35 @@
 
           <div class="col-md-6">
             <div class="widget-card h-100 d-flex flex-column">
-              <div
-                class="d-flex justify-content-between align-items-center mb-auto"
-              >
+              <div class="d-flex justify-content-between align-items-center mb-auto">
                 <h6 class="fw-bold mb-0">Next match</h6>
-                <span
-                  class="text-muted-custom d-flex align-items-center text-end"
-                  style="font-size: 0.85rem"
-                >
-                  <span class="text-wrap text-end" style="line-height: 1.2"
-                    >{{ fixtures.next_match.league }}</span
-                  >
+                <span class="text-muted-custom d-flex align-items-center text-end" style="font-size: 0.85rem">
+                  <span class="text-wrap text-end" style="line-height: 1.2">{{ fixtures.next_match.league }}</span>
                   {% if fixtures.next_match.league_logo %}
-                  <div
-                    class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 ms-2"
-                    style="width: 28px; height: 28px; border: 1px solid #555"
-                  >
-                    <img
-                      src="{{ fixtures.next_match.league_logo }}"
-                      style="
+                  <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 ms-2"
+                    style="width: 28px; height: 28px; border: 1px solid #555">
+                    <img src="{{ fixtures.next_match.league_logo }}" style="
                         max-width: 16px;
                         max-height: 16px;
                         object-fit: contain;
-                      "
-                    />
+                      " />
                   </div>
                   {% endif %}
                 </span>
               </div>
 
               {% if fixtures.next_match %}
-              <div
-                class="d-flex justify-content-center align-items-start mt-4 mb-3"
-              >
+              <div class="d-flex justify-content-center align-items-start mt-4 mb-3">
                 <div class="text-center flex-fill">
-                  <img
-                    src="{{ fixtures.next_match.home_logo }}"
-                    style="width: 50px; height: 50px; object-fit: contain"
-                  />
-                  <div
-                    class="mt-2 text-white text-wrap fw-bold"
-                    style="
+                  <img src="{{ fixtures.next_match.home_logo }}"
+                    style="width: 50px; height: 50px; object-fit: contain" />
+                  <div class="mt-2 text-white text-wrap fw-bold" style="
                       font-size: 0.85rem;
                       max-width: 80px;
                       margin: 0 auto;
                       line-height: 1.2;
                       min-height: 34px;
-                    "
-                    title="{{ fixtures.next_match.home_team }}"
-                  >
+                    " title="{{ fixtures.next_match.home_team }}">
                     {{ fixtures.next_match.home_team }}
                   </div>
                 </div>
@@ -166,21 +115,15 @@
                   </div>
                 </div>
                 <div class="text-center flex-fill">
-                  <img
-                    src="{{ fixtures.next_match.away_logo }}"
-                    style="width: 50px; height: 50px; object-fit: contain"
-                  />
-                  <div
-                    class="mt-2 text-white text-wrap fw-bold"
-                    style="
+                  <img src="{{ fixtures.next_match.away_logo }}"
+                    style="width: 50px; height: 50px; object-fit: contain" />
+                  <div class="mt-2 text-white text-wrap fw-bold" style="
                       font-size: 0.85rem;
                       max-width: 80px;
                       margin: 0 auto;
                       line-height: 1.2;
                       min-height: 34px;
-                    "
-                    title="{{ fixtures.next_match.away_team }}"
-                  >
+                    " title="{{ fixtures.next_match.away_team }}">
                     {{ fixtures.next_match.away_team }}
                   </div>
                 </div>
@@ -194,7 +137,7 @@
           </div>
         </div>
 
-        <div class="widget-card">
+        <div class="widget-card p-3">
           <h6 class="fw-bold mb-3">Daily summary</h6>
           <p class="text-white" style="font-size: 0.9rem; line-height: 1.6">
             {{ team.description }}
@@ -203,31 +146,22 @@
       </div>
 
       <div class="col-md-5">
-        <div class="widget-card">
+        <div class="widget-card p-3">
           <h6 class="fw-bold mb-3">Stadium</h6>
           <div class="d-flex align-items-center mb-3">
             <div class="me-4 d-flex align-items-center justify-content-center">
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+              <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <g clip-path="url(#clip0_1150_25961)">
                   <g>
                     <path
                       d="M12.2862 9.04636H14.9525L13.9337 6.29636L13.7775 5.98261C13.6094 5.68921 13.3704 5.44267 13.0823 5.26556C12.7943 5.08845 12.4664 4.98644 12.1287 4.96886H8.12874C7.73941 4.98045 7.36178 5.1047 7.04163 5.32657C6.72149 5.54843 6.47255 5.85838 6.32499 6.21886L5.22874 9.04636H7.97874C8.17215 8.63375 8.48326 8.28756 8.87295 8.05135C9.26263 7.81514 9.71347 7.69946 10.1687 7.71886C10.6127 7.70947 11.0497 7.83014 11.426 8.06601C11.8022 8.30189 12.1013 8.64266 12.2862 9.04636Z"
-                      fill="#ffffff"
-                    ></path>
+                      fill="#ffffff"></path>
                     <path
                       d="M18.2462 8.41886L16.05 3.63636L15.815 3.24386C15.5495 2.86982 15.196 2.56686 14.7857 2.36173C14.3755 2.15659 13.921 2.05558 13.4625 2.06761H6.71874C6.20623 2.07224 5.7041 2.21255 5.26343 2.47428C4.82276 2.736 4.45928 3.10979 4.20999 3.55761L2.09249 8.10511C1.71781 8.83182 1.52926 9.64013 1.54374 10.4576V14.2214C1.54408 15.2195 1.94072 16.1766 2.64649 16.8824C3.35226 17.5881 4.30939 17.9848 5.30749 17.9851H14.9525C15.9506 17.9848 16.9077 17.5881 17.6135 16.8824C18.3193 16.1766 18.7159 15.2195 18.7162 14.2214V10.5364C18.7193 9.80432 18.5588 9.08085 18.2462 8.41886ZM17.1487 10.8501V11.1639C17.1461 11.6981 16.9432 12.2119 16.58 12.6037C16.2169 12.9956 15.72 13.2369 15.1875 13.2801C15.4268 12.8186 15.5609 12.3097 15.58 11.7901V11.3176C15.5927 11.0795 15.5661 10.8409 15.5012 10.6114H12.365C12.1717 11.0257 11.8599 11.3733 11.4689 11.6103C11.078 11.8473 10.6255 11.963 10.1687 11.9426C9.71459 11.9525 9.267 11.833 8.87829 11.5979C8.48959 11.3628 8.17585 11.0219 7.97374 10.6151H4.75874C4.75874 10.8501 4.67999 11.0851 4.67999 11.3214V11.7914C4.6897 12.3119 4.82431 12.8225 5.07249 13.2801C4.54023 13.2366 4.04362 12.9951 3.68074 12.6033C3.31787 12.2115 3.1151 11.6979 3.11249 11.1639V10.4576C3.1302 9.8626 3.26351 9.27671 3.50499 8.73261L5.62124 4.26261C5.73221 4.07037 5.89237 3.91115 6.08525 3.80131C6.27814 3.69146 6.49679 3.63496 6.71874 3.63761H13.4625C13.8487 3.66205 14.212 3.82963 14.4812 4.10761L16.8337 9.12636C17.049 9.56516 17.1566 10.0489 17.1475 10.5376L17.1487 10.8501Z"
-                      fill="#ffffff"
-                    ></path>
+                      fill="#ffffff"></path>
                     <path
                       d="M10.09 9.28136C9.69748 9.28136 9.30623 9.51636 9.30623 9.83011C9.30623 10.1439 9.69873 10.3789 10.09 10.3789C10.4812 10.3789 10.8737 10.1439 10.8737 9.83011C10.8737 9.51636 10.4825 9.28136 10.09 9.28136Z"
-                      fill="#ffffff"
-                    ></path>
+                      fill="#ffffff"></path>
                   </g>
                 </g>
               </svg>
@@ -254,70 +188,100 @@
     </div>
   </div>
 
+  <div class="tab-pane fade" id="table" role="tabpanel">
+    <div class="widget-card p-0 mt-4" style="overflow: hidden;">
+      <div class="table-responsive">
+        <table class="table mb-0 custom-dark-table">
+          <thead>
+            <tr>
+              <th scope="col" class="text-center" style="width: 50px;">#</th>
+              <th scope="col">Club</th>
+              <th scope="col" class="text-center" title="Played">MP</th>
+              <th scope="col" class="text-center" title="Won">W</th>
+              <th scope="col" class="text-center" title="Drawn">D</th>
+              <th scope="col" class="text-center" title="Lost">L</th>
+              <th scope="col" class="text-center" title="Goal Difference">GD</th>
+              <th scope="col" class="text-center text-white fw-bold" title="Points">Pts</th>
+              <th scope="col" class="text-center" style="width: 120px;">Form</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if standings %}
+            {% for row in standings %}
+            <tr class="{% if row.team_id == team.id %}active-team-row{% endif %}">
+              <td class="text-center align-middle">{{ row.rank }}</td>
+              <td class="align-middle">
+                <div class="d-flex align-items-center gap-2">
+                  <img src="{{ row.team_logo }}" alt="Logo" style="width: 24px; height: 24px; object-fit: contain;">
+                  <span class="{% if row.team_id == team.id %}fw-bold text-white{% endif %}">{{ row.team_name }}</span>
+                </div>
+              </td>
+              <td class="text-center align-middle">{{ row.played }}</td>
+              <td class="text-center align-middle">{{ row.win }}</td>
+              <td class="text-center align-middle">{{ row.draw }}</td>
+              <td class="text-center align-middle">{{ row.lose }}</td>
+              <td class="text-center align-middle">{{ row.goals_diff }}</td>
+              <td class="text-center align-middle fw-bold text-white">{{ row.points }}</td>
+              <td class="text-center align-middle">
+                <div class="d-flex align-items-center justify-content-center gap-1">
+                  {% for result in row.form %}
+                  <span class="badge rounded-circle p-0 d-flex align-items-center justify-content-center
+                        {% if result == 'W' %}bg-success
+                        {% elif result == 'D' %}bg-secondary
+                        {% else %}bg-danger{% endif %}" style="width: 16px; height: 16px; font-size: 0.6rem;">
+                    {{ result }}
+                  </span>
+                  {% endfor %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr>
+              <td colspan="9" class="text-center py-4 text-muted">League standing data is currently unavailable.</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <div class="tab-pane fade" id="fixtures" role="tabpanel">
     <div class="row">
       <div class="col-md-8">
         <div class="widget-card p-0" style="overflow: hidden">
-          <div
-            class="d-flex justify-content-between align-items-center p-3 border-bottom border-dark"
-          >
-            <button
-              class="btn btn-sm btn-secondary rounded-circle"
-              id="prevPageBtn"
-              disabled
-            >
+          <div class="d-flex justify-content-between align-items-center p-3 border-bottom border-dark">
+            <button class="btn btn-sm btn-secondary rounded-circle" id="prevPageBtn" disabled>
               &lt;
             </button>
             <h6 class="fw-bold mb-0 text-white">Fixtures</h6>
-            <button
-              class="btn btn-sm btn-secondary rounded-circle"
-              id="nextPageBtn"
-            >
+            <button class="btn btn-sm btn-secondary rounded-circle" id="nextPageBtn">
               &gt;
             </button>
           </div>
 
-          <div
-            class="list-group list-group-flush bg-transparent"
-            id="fixturesContainer"
-          >
+          <div class="list-group list-group-flush bg-transparent" id="fixturesContainer">
             {% for match in fixtures.all_matches %}
             <div
-              class="list-group-item fixture-item bg-transparent border-dark py-3 px-3 align-items-center justify-content-between d-none"
-            >
-              <div
-                class="text-white text-start flex-shrink-0"
-                style="width: 20%; font-size: 0.85rem"
-              >
+              class="list-group-item fixture-item bg-transparent border-dark py-3 px-3 align-items-center justify-content-between d-none">
+              <div class="text-white text-start flex-shrink-0" style="width: 20%; font-size: 0.85rem">
                 {{ match.date }}
               </div>
 
-              <div
-                class="d-flex align-items-center justify-content-center"
-                style="width: 50%"
-              >
-                <div
-                  class="d-flex align-items-center justify-content-end"
-                  style="flex: 1; min-width: 0"
-                >
-                  <span
-                    class="text-end me-2 text-wrap fw-bold text-white"
-                    style="font-size: 0.95rem; line-height: 1.2"
-                    >{{ match.home_team }}</span
-                  >
-                  <img
-                    src="{{ match.home_logo }}"
-                    class="flex-shrink-0"
-                    style="width: 24px; height: 24px; object-fit: contain"
-                  />
+              <div class="d-flex align-items-center justify-content-center" style="width: 50%">
+                <div class="d-flex align-items-center justify-content-end" style="flex: 1; min-width: 0">
+                  <span class="text-end me-2 text-wrap fw-bold text-white"
+                    style="font-size: 0.95rem; line-height: 1.2">{{ match.home_team }}</span>
+                  <img src="{{ match.home_logo }}" class="flex-shrink-0"
+                    style="width: 24px; height: 24px; object-fit: contain" />
                 </div>
 
                 <div class="text-center mx-2 flex-shrink-0" style="width: 75px">
                   {% if match.status in ['FT', 'AET', 'PEN'] %}
                   <div
                     class="fw-bold px-2 py-1 text-white {% if match.result == 'W' %}bg-success {% elif match.result == 'D' %}bg-secondary {% elif match.result == 'L' %}bg-danger {% else %}bg-dark{% endif %}"
-                    style="border-radius: 4px; font-size: 0.9rem"
-                  >
+                    style="border-radius: 4px; font-size: 0.9rem">
                     {{ match.home_goals }} - {{ match.away_goals }}
                   </div>
                   {% else %}
@@ -327,43 +291,25 @@
                   {% endif %}
                 </div>
 
-                <div
-                  class="d-flex align-items-center justify-content-start"
-                  style="flex: 1; min-width: 0"
-                >
-                  <img
-                    src="{{ match.away_logo }}"
-                    class="flex-shrink-0"
-                    style="width: 24px; height: 24px; object-fit: contain"
-                  />
-                  <span
-                    class="text-start ms-2 text-wrap fw-bold text-white"
-                    style="font-size: 0.95rem; line-height: 1.2"
-                    >{{ match.away_team }}</span
-                  >
+                <div class="d-flex align-items-center justify-content-start" style="flex: 1; min-width: 0">
+                  <img src="{{ match.away_logo }}" class="flex-shrink-0"
+                    style="width: 24px; height: 24px; object-fit: contain" />
+                  <span class="text-start ms-2 text-wrap fw-bold text-white"
+                    style="font-size: 0.95rem; line-height: 1.2">{{ match.away_team }}</span>
                 </div>
               </div>
 
-              <div
-                class="d-flex align-items-center justify-content-end text-end text-white"
-                style="width: 30%; font-size: 0.85rem"
-              >
-                <span class="me-2 text-wrap" style="line-height: 1.2"
-                  >{{ match.league_name }}</span
-                >
+              <div class="d-flex align-items-center justify-content-end text-end text-white"
+                style="width: 30%; font-size: 0.85rem">
+                <span class="me-2 text-wrap" style="line-height: 1.2">{{ match.league_name }}</span>
                 {% if match.league_logo %}
-                <div
-                  class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                  style="width: 24px; height: 24px; border: 1px solid #555"
-                >
-                  <img
-                    src="{{ match.league_logo }}"
-                    style="
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                  style="width: 24px; height: 24px; border: 1px solid #555">
+                  <img src="{{ match.league_logo }}" style="
                       max-width: 14px;
                       max-height: 14px;
                       object-fit: contain;
-                    "
-                  />
+                    " />
                 </div>
                 {% endif %}
               </div>
@@ -374,52 +320,32 @@
       </div>
 
       <div class="col-md-4">
-        <div class="widget-card d-flex flex-column">
-          <div
-            class="d-flex justify-content-between align-items-center mb-auto"
-          >
+        <div class="widget-card d-flex flex-column p-3">
+          <div class="d-flex justify-content-between align-items-center mb-auto">
             <h6 class="fw-bold mb-0">Next match</h6>
-            <span
-              class="text-muted-custom d-flex align-items-center text-end"
-              style="font-size: 0.85rem"
-            >
-              <span class="text-wrap text-end" style="line-height: 1.2"
-                >{{ fixtures.next_match.league }}</span
-              >
+            <span class="text-muted-custom d-flex align-items-center text-end" style="font-size: 0.85rem">
+              <span class="text-wrap text-end" style="line-height: 1.2">{{ fixtures.next_match.league }}</span>
               {% if fixtures.next_match.league_logo %}
-              <div
-                class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 ms-2"
-                style="width: 28px; height: 28px; border: 1px solid #555"
-              >
-                <img
-                  src="{{ fixtures.next_match.league_logo }}"
-                  style="max-width: 16px; max-height: 16px; object-fit: contain"
-                />
+              <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 ms-2"
+                style="width: 28px; height: 28px; border: 1px solid #555">
+                <img src="{{ fixtures.next_match.league_logo }}"
+                  style="max-width: 16px; max-height: 16px; object-fit: contain" />
               </div>
               {% endif %}
             </span>
           </div>
 
           {% if fixtures.next_match %}
-          <div
-            class="d-flex justify-content-center align-items-start mt-4 mb-3"
-          >
+          <div class="d-flex justify-content-center align-items-start mt-4 mb-3">
             <div class="text-center flex-fill">
-              <img
-                src="{{ fixtures.next_match.home_logo }}"
-                style="width: 50px; height: 50px; object-fit: contain"
-              />
-              <div
-                class="mt-2 text-white text-wrap fw-bold"
-                style="
+              <img src="{{ fixtures.next_match.home_logo }}" style="width: 50px; height: 50px; object-fit: contain" />
+              <div class="mt-2 text-white text-wrap fw-bold" style="
                   font-size: 0.85rem;
                   max-width: 80px;
                   margin: 0 auto;
                   line-height: 1.2;
                   min-height: 34px;
-                "
-                title="{{ fixtures.next_match.home_team }}"
-              >
+                " title="{{ fixtures.next_match.home_team }}">
                 {{ fixtures.next_match.home_team }}
               </div>
             </div>
@@ -432,21 +358,14 @@
               </div>
             </div>
             <div class="text-center flex-fill">
-              <img
-                src="{{ fixtures.next_match.away_logo }}"
-                style="width: 50px; height: 50px; object-fit: contain"
-              />
-              <div
-                class="mt-2 text-white text-wrap fw-bold"
-                style="
+              <img src="{{ fixtures.next_match.away_logo }}" style="width: 50px; height: 50px; object-fit: contain" />
+              <div class="mt-2 text-white text-wrap fw-bold" style="
                   font-size: 0.85rem;
                   max-width: 80px;
                   margin: 0 auto;
                   line-height: 1.2;
                   min-height: 34px;
-                "
-                title="{{ fixtures.next_match.away_team }}"
-              >
+                " title="{{ fixtures.next_match.away_team }}">
                 {{ fixtures.next_match.away_team }}
               </div>
             </div>
@@ -468,8 +387,10 @@
       <h5 class="fw-bold mb-3 text-white border-bottom border-dark pb-2" style="font-size: 1.1rem;">Manager</h5>
       <div class="row mb-5">
         <div class="col-6 col-md-4 col-lg-3">
-          <div class="widget-card position-relative p-4 text-center h-100 transition-hover d-flex flex-column align-items-center" style="background-color: #1e1e1e; border: 1px solid #333; border-radius: 12px;">
-            <img src="{{ coach.photo }}" alt="{{ coach.name }}" class="rounded-circle mb-3 shadow-lg" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #2b2b2b; background-color: #111;">
+          <div
+            class="widget-card position-relative p-4 text-center h-100 transition-hover d-flex flex-column align-items-center">
+            <img src="{{ coach.photo }}" alt="{{ coach.name }}" class="rounded-circle mb-3 shadow-lg"
+              style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #2b2b2b; background-color: #111;">
             <h6 class="fw-bold text-white mb-2" style="font-size: 1.05rem;">{{ coach.name }}</h6>
             <div class="text-muted-custom" style="font-size: 0.85rem;">
               {% if coach.age %}<span>{{ coach.age }} years old</span><br>{% endif %}
@@ -481,90 +402,141 @@
       {% endif %}
 
       {% if squad %}
-        {% for position, players_in_group in squad.items() %}
-        <h5 class="fw-bold mb-3 text-white border-bottom border-dark pb-2 mt-4" style="font-size: 1.1rem;">{{ position }}</h5>
-        
-        <div class="row g-3 mb-5">
-          {% for player in players_in_group %}
-          <div class="col-6 col-md-4 col-lg-3">
-            <div class="widget-card position-relative p-3 text-center h-100 transition-hover d-flex flex-column align-items-center" style="background-color: #1e1e1e; border: 1px solid #333; border-radius: 12px;">
-              
-              {% if player.number %}
-              <div class="position-absolute top-0 end-0 m-2 d-flex align-items-center justify-content-center fw-bold shadow-sm" style="background-color: #3b82f6; color: white; font-size: 0.85rem; border-radius: 6px; width: 28px; height: 28px;">
-                {{ player.number }}
-              </div>
-              {% endif %}
+      {% for position, players_in_group in squad.items() %}
+      <h5 class="fw-bold mb-3 text-white border-bottom border-dark pb-2 mt-4" style="font-size: 1.1rem;">{{ position }}
+      </h5>
 
-              <img src="{{ player.photo }}" alt="{{ player.name }}" class="rounded-circle mb-3 shadow-sm" style="width: 75px; height: 75px; object-fit: cover; border: 2px solid #333; background-color: #111;">
-              
-              <h6 class="fw-bold text-white mb-2 w-100 text-truncate px-1" title="{{ player.name }}" style="font-size: 0.95rem;">
-                {{ player.name }}
-              </h6>
+      <div class="row g-3 mb-5">
+        {% for player in players_in_group %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <div
+            class="widget-card position-relative p-3 text-center h-100 transition-hover d-flex flex-column align-items-center">
 
-              <div class="d-flex align-items-center justify-content-center gap-2 mb-3" style="font-size: 0.8rem;">
-                {% if player.flag_url %}
-                  <img src="{{ player.flag_url }}" alt="Flag" style="width: 18px; border-radius: 2px;">
-                {% endif %}
-                <span class="text-white-50 text-truncate" style="max-width: 80px;">{{ player.nationality }}</span>
-              </div>
-
-              <div class="w-100 mt-auto border-top border-dark pt-2 text-muted-custom" style="font-size: 0.8rem;">
-                <div class="d-flex justify-content-between px-1">
-                  <span>Age</span> <span class="text-white fw-medium">{% if player.age %}{{ player.age }}{% else %}-{% endif %}</span>
-                </div>
-                <div class="d-flex justify-content-between px-1">
-                  <span>Height</span> <span class="text-white fw-medium">{% if player.height %}{{ player.height }}{% else %}-{% endif %}</span>
-                </div>
-              </div>
-
+            {% if player.number %}
+            <div
+              class="position-absolute top-0 end-0 m-2 d-flex align-items-center justify-content-center fw-bold shadow-sm"
+              style="background-color: #3b82f6; color: white; font-size: 0.85rem; border-radius: 6px; width: 28px; height: 28px;">
+              {{ player.number }}
             </div>
+            {% endif %}
+
+            <img src="{{ player.photo }}" alt="{{ player.name }}" class="rounded-circle mb-3 shadow-sm"
+              style="width: 75px; height: 75px; object-fit: cover; border: 2px solid #333; background-color: #111;">
+
+            <h6 class="fw-bold text-white mb-2 w-100 text-truncate px-1" title="{{ player.name }}"
+              style="font-size: 0.95rem;">
+              {{ player.name }}
+            </h6>
+
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-3" style="font-size: 0.8rem;">
+              {% if player.flag_url %}
+              <img src="{{ player.flag_url }}" alt="Flag" style="width: 18px; border-radius: 2px;">
+              {% endif %}
+              <span class="text-white-50 text-truncate" style="max-width: 80px;">{{ player.nationality }}</span>
+            </div>
+
+            <div class="w-100 mt-auto border-top border-dark pt-2 text-muted-custom" style="font-size: 0.8rem;">
+              <div class="d-flex justify-content-between px-1">
+                <span>Age</span> <span class="text-white fw-medium">{% if player.age %}{{ player.age }}{% else %}-{%
+                  endif %}</span>
+              </div>
+              <div class="d-flex justify-content-between px-1">
+                <span>Height</span> <span class="text-white fw-medium">{% if player.height %}{{ player.height }}{% else
+                  %}-{% endif %}</span>
+              </div>
+            </div>
+
           </div>
-          {% endfor %}
         </div>
         {% endfor %}
+      </div>
+      {% endfor %}
       {% else %}
-        <div class="text-center text-muted mt-5">
-          <p>No squad data available for this team.</p>
-        </div>
+      <div class="text-center text-muted mt-5">
+        <p>No squad data available for this team.</p>
+      </div>
       {% endif %}
 
     </div>
   </div>
+</div>
 
-  <style>
-    .transition-hover {
-      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s;
-    }
-    .transition-hover:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-      background-color: #252525 !important;
-      border-color: #555 !important;
-    }
-  </style>
-  </div>
+<style>
+  /* Fixes the white background for all team widgets */
+  .widget-card {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 12px;
+  }
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const favBtn = document.getElementById("favoriteBtn");
-      
-      if (favBtn) {
-        favBtn.addEventListener("click", function() {
-          const teamId = this.getAttribute("data-team-id");
-          const teamName = this.getAttribute("data-team-name");
-          const teamLogo = this.getAttribute("data-team-logo");
-          
-          fetch("/api/favorites/toggle", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              team_id: teamId,
-              team_name: teamName,
-              team_logo: teamLogo
-            })
+  /* Hover animations for cards */
+  .transition-hover {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s;
+  }
+
+  .transition-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+    background-color: #252525 !important;
+    border-color: #555 !important;
+  }
+
+  /* League Table Dark Theme Customizations */
+  .custom-dark-table {
+    color: #ffffff;
+  }
+
+  .custom-dark-table thead tr {
+    background-color: #111111 !important;
+  }
+
+  .custom-dark-table th {
+    border-bottom: 2px solid #333 !important;
+    background-color: transparent !important;
+    color: #999 !important;
+  }
+
+  .custom-dark-table td {
+    background-color: transparent !important;
+    border-bottom: 1px solid #2b2b2b !important;
+    border-top: none !important;
+  }
+
+  .custom-dark-table tbody tr {
+    background-color: #1e1e1e !important;
+    transition: background-color 0.2s;
+  }
+
+  .custom-dark-table tbody tr.active-team-row {
+    background-color: #000000 !important;
+  }
+
+  .custom-dark-table tbody tr:hover {
+    background-color: #2b2b2b !important;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const favBtn = document.getElementById("favoriteBtn");
+
+    if (favBtn) {
+      favBtn.addEventListener("click", function () {
+        const teamId = this.getAttribute("data-team-id");
+        const teamName = this.getAttribute("data-team-name");
+        const teamLogo = this.getAttribute("data-team-logo");
+
+        fetch("/api/favorites/toggle", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            team_id: teamId,
+            team_name: teamName,
+            team_logo: teamLogo
           })
+        })
           .then(response => response.json())
           .then(data => {
             if (data.success) {
@@ -580,58 +552,56 @@
             }
           })
           .catch(error => console.error("Error toggling favorite:", error));
-        });
-      }
+      });
+    }
 
-      const items = document.querySelectorAll(".fixture-item");
-      const prevBtn = document.getElementById("prevPageBtn");
-      const nextBtn = document.getElementById("nextPageBtn");
+    const items = document.querySelectorAll(".fixture-item");
+    const prevBtn = document.getElementById("prevPageBtn");
+    const nextBtn = document.getElementById("nextPageBtn");
 
-      let currentPage = 1;
-      const itemsPerPage = 10;
-      const totalPages = Math.ceil(items.length / itemsPerPage);
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    const totalPages = Math.ceil(items.length / itemsPerPage);
 
-      function showPage(page) {
-        items.forEach((item, index) => {
-          item.classList.remove("d-flex");
-          item.classList.add("d-none");
+    function showPage(page) {
+      items.forEach((item, index) => {
+        item.classList.remove("d-flex");
+        item.classList.add("d-none");
 
-          if (
-            index >= (page - 1) * itemsPerPage &&
-            index < page * itemsPerPage
-          ) {
-            item.classList.remove("d-none");
-            item.classList.add("d-flex");
-          }
-        });
+        if (
+          index >= (page - 1) * itemsPerPage &&
+          index < page * itemsPerPage
+        ) {
+          item.classList.remove("d-none");
+          item.classList.add("d-flex");
+        }
+      });
 
-        if (prevBtn) prevBtn.disabled = page === 1;
-        if (nextBtn) nextBtn.disabled = page === totalPages || totalPages === 0;
-      }
+      if (prevBtn) prevBtn.disabled = page === 1;
+      if (nextBtn) nextBtn.disabled = page === totalPages || totalPages === 0;
+    }
 
-      if (prevBtn) {
-        prevBtn.addEventListener("click", () => {
-          if (currentPage > 1) {
-            currentPage--;
-            showPage(currentPage);
-          }
-        });
-      }
+    if (prevBtn) {
+      prevBtn.addEventListener("click", () => {
+        if (currentPage > 1) {
+          currentPage--;
+          showPage(currentPage);
+        }
+      });
+    }
 
-      if (nextBtn) {
-        nextBtn.addEventListener("click", () => {
-          if (currentPage < totalPages) {
-            currentPage++;
-            showPage(currentPage);
-          }
-        });
-      }
+    if (nextBtn) {
+      nextBtn.addEventListener("click", () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          showPage(currentPage);
+        }
+      });
+    }
 
-      if (items.length > 0) {
-        showPage(1);
-      }
-    });
-  </script>
-  {% endblock %}
-</div>
-    
+    if (items.length > 0) {
+      showPage(1);
+    }
+  });
+</script>
+{% endblock %}

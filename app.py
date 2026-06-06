@@ -8,6 +8,7 @@ from api_client import (
     get_top_scorers,
     search_teams_list,
     get_exact_team,
+    get_league_standings,
 )
 from football_api_manager import api_manager
 import db_manager
@@ -233,12 +234,9 @@ def stadiums():
     if not team_query:
         return redirect(url_for("index"))
 
-    # Attempt to fetch basic team profile from Local Seed DB first
     team_data = db_manager.get_team_profile(team_query)
     if not team_data:
         team_data = get_exact_team(team_query)
-
-        # team_data = api_manager.get_exact_team(team_query)
 
     if team_data:
         team_id = team_data["id"]
@@ -323,13 +321,27 @@ def stadiums():
 
         is_fav = db_manager.is_favorite(team_id)
 
+        cache_key_standings = f"standings_team_{team_id}"
+        standings_data = db_manager.get_cached_api_data(
+            cache_key_standings, hours_valid=24
+        )
+
+        if not standings_data:
+            print(
+                f"Standings not in cache. Fetching from API for Team ID: {team_id}..."
+            )
+            standings_data = get_league_standings(team_id)
+            if standings_data:
+                db_manager.save_cached_api_data(cache_key_standings, standings_data)
+
         return render_template(
             "team.html",
             team=team_data,
             fixtures=fixtures_data,
             squad=final_squad,
             coach=coach_data,
-            team_league_id=team_league_id,
+            is_favorite=is_fav,
+            standings=standings_data,
         )
     else:
         return f"<body style='background-color: #000; color: #fff; text-align: center;'><h1>Team '{team_query}' not found.</h1><a href='/' style='color: #fff;'>Try again</a></body>"
@@ -466,9 +478,9 @@ def api_toggle_favorite():
     team_id = data.get("team_id")
     team_name = data.get("team_name")
     team_logo = data.get("team_logo")
-    
+
     if not team_id:
         return jsonify({"error": "Missing team_id"}), 400
-        
+
     is_fav = db_manager.toggle_favorite(team_id, team_name, team_logo)
     return jsonify({"success": True, "is_favorite": is_fav})
