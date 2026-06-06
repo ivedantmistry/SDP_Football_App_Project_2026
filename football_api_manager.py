@@ -340,6 +340,7 @@ class FootballAPIManager:
                     "away_goals": away_goals,
                     "league_name": match["league"]["name"],
                     "league_logo": match["league"]["logo"],
+                    "league_id": match["league"]["id"],
                     "result": result,
                 }
             )
@@ -423,6 +424,41 @@ class FootballAPIManager:
         # Use the COUNTRY_FLAGS mapping to get the code, then construct the URL
         code = COUNTRY_FLAGS.get(country_name)
         return f"https://flagcdn.com/w20/{code}.png" if code else None
+
+    def get_team_statistics(self, league_id, season, team_id):
+        """
+        Fetches detailed statistics for a team within a specific league and season.
+        Used for the Team vs Team comparison feature.
+        """
+        url = f"{self.sports_base_url}/teams/statistics"
+        params = {"league": league_id, "season": season, "team": team_id}
+
+        # Execute the request using the centralized robust wrapper
+        response = self._make_request(url, self.headers_sports, params)
+
+        if response.success and response.data:
+            return response.data.get("response")
+
+        # Note: Fallback API (Football-Data) often lacks detailed statistics in free tiers.
+        # Returning None allows the frontend to handle the empty state gracefully.
+        print(
+            f"[API Manager] Warning: Could not fetch statistics for Team ID {team_id}."
+        )
+        return None
+
+    def get_teams_in_league(self, league_id, season=2024):
+        """
+        Fetches all teams participating in a specific league for a given season.
+        Used to populate the opponent selection dropdown/modal.
+        """
+        url = f"{self.sports_base_url}/teams"
+        params = {"league": league_id, "season": season}
+
+        response = self._make_request(url, self.headers_sports, params)
+        if response.success and response.data:
+            # Returns a list of dictionaries: [{"team": {...}, "venue": {...}}, ...]
+            return response.data.get("response", [])
+        return []
 
 
 # Initialize a global instance to be imported by app.py

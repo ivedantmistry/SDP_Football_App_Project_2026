@@ -5,7 +5,6 @@ from flask import Flask, jsonify, render_template, request, redirect, url_for
 from api_client import (
     fetch_squad_from_api,
     get_team_coach,
-    get_team_fixtures,
     get_top_scorers,
     search_teams_list,
     get_exact_team,
@@ -243,9 +242,19 @@ def stadiums():
 
     if team_data:
         team_id = team_data["id"]
-        fixtures_data = get_team_fixtures(team_id)
 
-        # fixtures_data = api_manager.get_team_fixtures(team_id)
+        fixtures_data = api_manager.get_team_fixtures(team_id)
+
+        team_league_id = 39
+        if fixtures_data and fixtures_data.get("all_matches"):
+            league_counts = {}
+            for match in fixtures_data["all_matches"]:
+                lid = match.get("league_id")
+                if lid:
+                    league_counts[lid] = league_counts.get(lid, 0) + 1
+
+            if league_counts:
+                team_league_id = max(league_counts, key=league_counts.get)
 
         # Coach Lazy Loading Logic
         coach_data = db_manager.get_team_coach_local(team_id)
@@ -321,6 +330,7 @@ def stadiums():
             fixtures=fixtures_data,
             squad=final_squad,
             coach=coach_data,
+            team_league_id=team_league_id,
         )
     else:
         return f"<body style='background-color: #000; color: #fff; text-align: center;'><h1>Team '{team_query}' not found.</h1><a href='/' style='color: #fff;'>Try again</a></body>"
@@ -359,6 +369,90 @@ def api_search():
 def dashboard():
     """Displays saved favorites and search history."""
     return render_template("dashboard.html")
+
+
+@app.route("/compare")
+def compare_teams():
+    """
+    Renders the Team vs Team comparison dashboard (FotMob style).
+    Requires a primary team (team1) and an optional secondary team (team2).
+    """
+    # Retrieve query parameters
+    team1_id = request.args.get("team1")
+    league_id = request.args.get("league", "39")  # Default to Premier League
+    season = 2024  # Current active season
+
+    # Redirect to home if the primary team ID is missing
+    if not team1_id:
+        return redirect(url_for("index"))
+
+    # Fetch statistics for the primary team
+    stats1 = api_manager.get_team_statistics(league_id, season, team1_id)
+    if not stats1:
+        return "<body style='background-color: #000; color: #fff; text-align: center; margin-top: 50px;'><h1>Statistics not available for this team.</h1></body>"
+
+    league_teams = api_manager.get_teams_in_league(league_id, season)
+
+    if league_teams:
+        league_teams.sort(key=lambda x: x["team"]["name"])
+
+    # Fetch statistics for the secondary team if selected by the user
+    team2_id = request.args.get("team2")
+    stats2 = None
+    if team2_id:
+        stats2 = api_manager.get_team_statistics(league_id, season, team2_id)
+
+    color1 = get_team_color(stats1["team"]["name"])
+    color2 = "#10b981"
+
+    if stats2:
+        color2 = get_team_color(stats2["team"]["name"])
+
+        if color1 == color2:
+            color2 = "#ffffff"
+
+    return render_template(
+        "compare.html",
+        stats1=stats1,
+        stats2=stats2,
+        league_id=league_id,
+        league_teams=league_teams,
+        color1=color1,
+        color2=color2,
+    )
+
+
+def get_team_color(team_name):
+    """Xác định màu sắc chủ đạo của đội bóng dựa vào tên."""
+    name = team_name.lower()
+
+    # Nhóm Đỏ (Red)
+    if any(
+        x in name
+        for x in [
+            "bayern",
+            "arsenal",
+            "liverpool",
+            "manchester united",
+            "roma",
+            "milan",
+        ]
+    ):
+        return "#ef4444"
+    elif any(x in name for x in ["chelsea", "everton", "schalke", "leicester"]):
+        return "#3b82f6"
+    elif any(x in name for x in ["manchester city", "lazio", "napoli"]):
+        return "#60a5fa"
+    elif any(x in name for x in ["dortmund", "villareal", "norwich"]):
+        return "#eab308"
+    elif any(x in name for x in ["real madrid", "tottenham", "juventus", "newcastle"]):
+        return "#f3f4f6"
+    elif any(x in name for x in ["paris", "psg"]):
+        return "#1e3a8a"
+
+    # Nếu đội bóng lạ, tạo màu ngẫu nhiên nhưng cố định theo tên
+    colors = ["#10b981", "#8b5cf6", "#f59e0b", "#06b6d4", "#ec4899"]
+    return colors[sum(ord(c) for c in name) % len(colors)]
 
 
 if __name__ == "__main__":
