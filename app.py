@@ -325,12 +325,12 @@ def stadiums():
             if standings_data:
                 db_manager.save_cached_api_data(cache_key_standings, standings_data)
         stadium_map_html = get_stadium_map_html(
-            team_data["stadium_name"], team_data["stadium_location"]
+            team_data.get("stadium_name", ""), team_data.get("stadium_location", "")
         )
 
-        destination_query = quote(
-            f"{team_data['stadium_name']}, {team_data['stadium_location']}"
-        )
+        stadium_name = team_data.get("stadium_name", "")
+        stadium_location = team_data.get("stadium_location", "")
+        destination_query = quote(f"{stadium_name}, {stadium_location}")
         directions_url = (
             f"https://www.google.com/maps/dir/?api=1&destination={destination_query}"
         )
@@ -470,8 +470,6 @@ def get_team_color(team_name):
     return colors[sum(ord(c) for c in name) % len(colors)]
 
 
-
-
 @app.route("/api/favorites/toggle", methods=["POST"])
 def api_toggle_favorite():
     """API endpoint to add/remove a team from favorites."""
@@ -504,22 +502,26 @@ def get_stadium_map_html(stadium_name, city):
             # Default to London if all geocoding fails
             lat, lon = 51.5074, -0.1278
 
-        # Create Folium Map using a dark theme that matches your UI!
-        m = folium.Map(location=[lat, lon], zoom_start=15, tiles="CartoDB dark_matter")
+        # Create Folium Map using a dark theme!
+        m = folium.Map(
+            location=[lat, lon],
+            zoom_start=15,
+            tiles="CartoDB dark_matter",
+            control_scale=True,
+        )
 
-        # Add a marker
+        # Add a sleek marker
         folium.Marker(
             [lat, lon],
             tooltip=stadium_name,
             icon=folium.Icon(color="blue", icon="info-sign"),
         ).add_to(m)
 
-        # Convert the map to an HTML string that Flask can render
         return m._repr_html_()
 
     except Exception as e:
         print(f"Geocoding error: {e}")
-        return "<div class='text-center text-muted p-4'>Map currently unavailable</div>"
+        return "<div class='text-center text-muted p-4' style='height: 100%; display: flex; align-items: center; justify-content: center;'>Map currently unavailable</div>"
 
 
 if __name__ == "__main__":

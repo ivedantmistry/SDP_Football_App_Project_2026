@@ -146,38 +146,50 @@
       </div>
 
       <div class="col-md-5">
-        <div class="widget-card p-0" style="overflow: hidden;">
+        <div class="widget-card d-flex flex-column h-100 p-0"
+          style="background-color: #1e1e1e; border: 1px solid #333; border-radius: 12px; overflow: hidden;">
 
-          <div class="p-3 border-bottom border-dark">
-            <h6 class="fw-bold mb-3 text-white">Stadium</h6>
-            <div class="d-flex align-items-center">
-              <div class="me-3 d-flex align-items-center justify-content-center">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
-                  </path>
+          <div class="p-4 pb-3">
+            <div class="d-flex align-items-center mb-3">
+              <div class="d-flex align-items-center justify-content-center rounded-circle"
+                style="width: 44px; height: 44px; background-color: #2b2b2b; border: 1px solid #444; flex-shrink: 0;">
+                <svg width="20" height="20" fill="none" stroke="#fff" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
               </div>
-              <div>
-                <div class="fw-bold fs-5 text-white">{{ team.stadium_name }}</div>
-                <div class="text-muted-custom" style="font-size: 0.85rem">
-                  {{ team.stadium_location }} • {{ team.stadium_capacity }} Capacity
-                </div>
+              <div class="ms-3">
+                <h5 class="fw-bold text-white mb-0" style="font-size: 1.1rem;">{{ team.stadium_name }}</h5>
+                <div class="text-muted-custom" style="font-size: 0.85rem;">{{ team.stadium_location }}</div>
+              </div>
+            </div>
+
+            <div class="row text-center border-top border-dark pt-3">
+              <div class="col-6 border-end border-dark">
+                <div class="fw-bold text-white">{{ team.stadium_capacity }}</div>
+                <div class="text-muted-custom text-uppercase mt-1" style="font-size: 0.65rem; letter-spacing: 1px;">
+                  Capacity</div>
+              </div>
+              <div class="col-6">
+                <div class="fw-bold text-white">Grass</div>
+                <div class="text-muted-custom text-uppercase mt-1" style="font-size: 0.65rem; letter-spacing: 1px;">
+                  Surface</div>
               </div>
             </div>
           </div>
 
-          <div style="width: 100%; height: 250px; background-color: #111;">
+          <div
+            style="width: 100%; height: 220px; background-color: #111; border-top: 1px solid #333; border-bottom: 1px solid #333;">
             {{ stadium_map | safe }}
           </div>
 
-          <div class="p-3 bg-transparent text-center">
+          <div class="p-3 mt-auto bg-transparent">
             <a href="{{ directions_url }}" target="_blank"
-              class="btn btn-primary w-100 fw-bold d-flex align-items-center justify-content-center gap-2"
-              style="border-radius: 8px;">
-              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg">
+              class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2 transition-hover"
+              style="background-color: #2563eb; color: white; border-radius: 8px; padding: 10px 0; border: none;">
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7">
                 </path>
