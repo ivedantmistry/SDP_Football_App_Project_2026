@@ -470,8 +470,6 @@ def get_team_color(team_name):
     return colors[sum(ord(c) for c in name) % len(colors)]
 
 
-if __name__ == "__main__":
-    app.run(debug=True, port=5000)
 
 
 @app.route("/api/favorites/toggle", methods=["POST"])
@@ -522,3 +520,7 @@ def get_stadium_map_html(stadium_name, city):
     except Exception as e:
         print(f"Geocoding error: {e}")
         return "<div class='text-center text-muted p-4'>Map currently unavailable</div>"
+
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)
