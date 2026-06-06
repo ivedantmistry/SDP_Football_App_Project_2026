@@ -1,0 +1,446 @@
+{% extends "base.html" %} {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  .form-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .form-w {
+    background-color: #10b981;
+  }
+  .form-d {
+    background-color: #6b7280;
+  }
+  .form-l {
+    background-color: #ef4444;
+  }
+</style>
+
+<div class="container-fluid mt-4" style="max-width: 600px; margin: 0 auto">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <a
+      href="javascript:history.back()"
+      class="btn btn-sm text-white rounded-circle d-flex align-items-center justify-content-center"
+      style="
+        background-color: #1e1e1e;
+        width: 36px;
+        height: 36px;
+        text-decoration: none;
+      "
+    >
+      &lsaquo;
+    </a>
+    <h5 class="text-white mb-0 fw-bold">Team vs team</h5>
+    <div style="width: 36px"></div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6">
+      <div
+        class="widget-card d-flex flex-column align-items-center justify-content-center p-4 h-100"
+        style="
+          background-color: #1e1e1e;
+          border-radius: 16px;
+          border: 1px solid #333;
+        "
+      >
+        <div
+          class="bg-white rounded d-flex align-items-center justify-content-center p-1 mb-2"
+          style="width: 60px; height: 60px"
+        >
+          <img
+            src="{{ stats1.team.logo }}"
+            alt="Team 1"
+            style="width: 100%; height: 100%; object-fit: contain"
+          />
+        </div>
+        <span class="text-white fw-bold text-center" style="font-size: 0.95rem"
+          >{{ stats1.team.name }}</span
+        >
+
+        <div class="d-flex gap-1 mt-2">
+          {% set form1 = stats1.form or "" %} {% for char in form1[-5:] %}
+          <span
+            class="form-dot {% if char == 'W' %}form-w{% elif char == 'D' %}form-d{% else %}form-l{% endif %}"
+          ></span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6">
+      <div
+        class="widget-card d-flex flex-column align-items-center justify-content-center p-4 h-100 transition-hover"
+        style="
+          background-color: #1e1e1e;
+          border-radius: 16px;
+          border: 1px solid #333;
+          cursor: pointer;
+        "
+        data-bs-toggle="modal"
+        data-bs-target="#selectTeamModal"
+      >
+        {% if stats2 %}
+        <div
+          class="bg-white rounded d-flex align-items-center justify-content-center p-1 mb-2"
+          style="width: 60px; height: 60px"
+        >
+          <img
+            src="{{ stats2.team.logo }}"
+            alt="Team 2"
+            style="width: 100%; height: 100%; object-fit: contain"
+          />
+        </div>
+        <span class="text-white fw-bold text-center" style="font-size: 0.95rem"
+          >{{ stats2.team.name }}</span
+        >
+
+        <div class="d-flex gap-1 mt-2">
+          {% set form2 = stats2.form or "" %} {% for char in form2[-5:] %}
+          <span
+            class="form-dot {% if char == 'W' %}form-w{% elif char == 'D' %}form-d{% else %}form-l{% endif %}"
+          ></span>
+          {% endfor %}
+        </div>
+
+        {% elif request.args.get('team2') %}
+        <div
+          class="rounded-circle d-flex align-items-center justify-content-center mb-2"
+          style="width: 50px; height: 50px; background-color: #ef4444"
+        >
+          <span class="text-white fw-bold">!</span>
+        </div>
+        <span class="text-danger fw-bold text-center" style="font-size: 0.9rem"
+          >API Busy</span
+        >
+        <span class="text-muted text-center" style="font-size: 0.75rem"
+          >Click to retry</span
+        >
+
+        {% else %}
+        <div
+          class="rounded-circle d-flex align-items-center justify-content-center mb-2"
+          style="width: 50px; height: 50px; background-color: #2b2b2b"
+        >
+          <span class="text-muted" style="font-size: 1.5rem; margin-top: -2px"
+            >+</span
+          >
+        </div>
+        <span class="text-success fw-bold text-center" style="font-size: 0.9rem"
+          >Select team</span
+        >
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="selectTeamModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div
+        class="modal-content"
+        style="
+          background-color: #1e1e1e;
+          border: 1px solid #333;
+          border-radius: 16px;
+        "
+      >
+        <div class="modal-header border-bottom border-secondary">
+          <h5 class="modal-title text-white fw-bold">Select opponent</h5>
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body p-0">
+          <div class="list-group list-group-flush rounded-bottom">
+            {% for item in league_teams %} {% if item.team.id != stats1.team.id
+            %}
+            <a
+              href="{{ url_for('compare_teams', team1=stats1.team.id, league=league_id, team2=item.team.id) }}"
+              class="list-group-item list-group-item-action d-flex align-items-center text-white border-bottom border-secondary transition-hover"
+              style="background-color: transparent; padding: 12px 20px"
+            >
+              <img
+                src="{{ item.team.logo }}"
+                style="
+                  width: 28px;
+                  height: 28px;
+                  object-fit: contain;
+                  margin-right: 15px;
+                "
+                class="bg-white rounded p-1"
+              />
+              <span class="fw-medium">{{ item.team.name }}</span>
+            </a>
+            {% endif %} {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if stats2 %} {% set tc1 = '#000' if color1 in ['#ffffff', '#eab308',
+  '#f3f4f6'] else '#fff' %} {% set tc2 = '#000' if color2 in ['#ffffff',
+  '#eab308', '#f3f4f6'] else '#fff' %} {% set goals1 = (stats1.get('goals',
+  {}).get('for', {}).get('total', {}).get('home') or 0) + (stats1.get('goals',
+  {}).get('for', {}).get('total', {}).get('away') or 0) %} {% set goals2 =
+  (stats2.get('goals', {}).get('for', {}).get('total', {}).get('home') or 0) +
+  (stats2.get('goals', {}).get('for', {}).get('total', {}).get('away') or 0) %}
+  {% set conceded1 = (stats1.get('goals', {}).get('against', {}).get('total',
+  {}).get('home') or 0) + (stats1.get('goals', {}).get('against',
+  {}).get('total', {}).get('away') or 0) %} {% set conceded2 =
+  (stats2.get('goals', {}).get('against', {}).get('total', {}).get('home') or 0)
+  + (stats2.get('goals', {}).get('against', {}).get('total', {}).get('away') or
+  0) %} {% set clean1 = stats1.get('clean_sheet', {}).get('total') or 0 %} {%
+  set clean2 = stats2.get('clean_sheet', {}).get('total') or 0 %} {% set wins1 =
+  stats1.get('fixtures', {}).get('wins', {}).get('total') or 0 %} {% set wins2 =
+  stats2.get('fixtures', {}).get('wins', {}).get('total') or 0 %} {% set losses1
+  = stats1.get('fixtures', {}).get('loses', {}).get('total') or 0 %} {% set
+  losses2 = stats2.get('fixtures', {}).get('loses', {}).get('total') or 0 %}
+
+  <div
+    class="widget-card p-4 mb-4"
+    style="background-color: #1e1e1e; border-radius: 16px; border: 1px solid #333;
+                --c1: {{ color1 }}; --t1: {{ tc1 }};
+                --c2: {{ color2 }}; --t2: {{ tc2 }};"
+  >
+    <style>
+      .highlight-team1 {
+        background-color: var(--c1);
+        color: var(--t1);
+      }
+      .highlight-team2 {
+        background-color: var(--c2);
+        color: var(--t2);
+      }
+      .stat-normal {
+        color: #ffffff;
+      }
+    </style>
+
+    <h6 class="text-center text-white fw-bold mb-4">Top stats</h6>
+
+    <div class="row align-items-center mb-3">
+      <div class="col-3 text-start">
+        <span
+          class="fw-bold px-2 rounded {% if goals1 > goals2 %}highlight-team1{% else %}stat-normal{% endif %}"
+          >{{ goals1 }}</span
+        >
+      </div>
+      <div class="col-6 text-center">
+        <span class="text-muted" style="font-size: 0.9rem">Goals scored</span>
+      </div>
+      <div class="col-3 text-end">
+        <span
+          class="fw-bold px-2 rounded {% if goals2 > goals1 %}highlight-team2{% else %}stat-normal{% endif %}"
+          >{{ goals2 }}</span
+        >
+      </div>
+    </div>
+
+    <div class="row align-items-center mb-3">
+      <div class="col-3 text-start">
+        <span
+          class="fw-bold px-2 rounded {% if conceded1 < conceded2 %}highlight-team1{% else %}stat-normal{% endif %}"
+          >{{ conceded1 }}</span
+        >
+      </div>
+      <div class="col-6 text-center">
+        <span class="text-muted" style="font-size: 0.9rem">Goals conceded</span>
+      </div>
+      <div class="col-3 text-end">
+        <span
+          class="fw-bold px-2 rounded {% if conceded2 < conceded1 %}highlight-team2{% else %}stat-normal{% endif %}"
+          >{{ conceded2 }}</span
+        >
+      </div>
+    </div>
+
+    <div class="row align-items-center mb-3">
+      <div class="col-3 text-start">
+        <span
+          class="fw-bold px-2 rounded {% if wins1 > wins2 %}highlight-team1{% else %}stat-normal{% endif %}"
+          >{{ wins1 }}</span
+        >
+      </div>
+      <div class="col-6 text-center">
+        <span class="text-muted" style="font-size: 0.9rem">Total wins</span>
+      </div>
+      <div class="col-3 text-end">
+        <span
+          class="fw-bold px-2 rounded {% if wins2 > wins1 %}highlight-team2{% else %}stat-normal{% endif %}"
+          >{{ wins2 }}</span
+        >
+      </div>
+    </div>
+
+    <div class="row align-items-center mb-3">
+      <div class="col-3 text-start">
+        <span
+          class="fw-bold px-2 rounded {% if losses1 < losses2 %}highlight-team1{% else %}stat-normal{% endif %}"
+          >{{ losses1 }}</span
+        >
+      </div>
+      <div class="col-6 text-center">
+        <span class="text-muted" style="font-size: 0.9rem">Total losses</span>
+      </div>
+      <div class="col-3 text-end">
+        <span
+          class="fw-bold px-2 rounded {% if losses2 < losses1 %}highlight-team2{% else %}stat-normal{% endif %}"
+          >{{ losses2 }}</span
+        >
+      </div>
+    </div>
+
+    <div class="row align-items-center mb-1">
+      <div class="col-3 text-start">
+        <span
+          class="fw-bold px-2 rounded {% if clean1 > clean2 %}highlight-team1{% else %}stat-normal{% endif %}"
+          >{{ clean1 }}</span
+        >
+      </div>
+      <div class="col-6 text-center">
+        <span class="text-muted" style="font-size: 0.9rem">Clean sheets</span>
+      </div>
+      <div class="col-3 text-end">
+        <span
+          class="fw-bold px-2 rounded {% if clean2 > clean1 %}highlight-team2{% else %}stat-normal{% endif %}"
+          >{{ clean2 }}</span
+        >
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="widget-card p-4 mt-3 mb-5"
+    style="
+      background-color: #1e1e1e;
+      border-radius: 16px;
+      border: 1px solid #333;
+    "
+  >
+    <h6 class="text-center text-white fw-bold mb-3">Performance Radar</h6>
+
+    <div
+      style="
+        position: relative;
+        height: 320px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      "
+    >
+      <canvas
+        id="teamComparisonChart"
+        data-team1-name="{{ stats1.team.name }}"
+        data-team1-stats="{{ goals1 }},{{ wins1 }},{{ clean1 }},{{ losses1 }},{{ conceded1 }}"
+        data-team1-color="{{ color1 }}"
+        data-team2-name="{{ stats2.team.name }}"
+        data-team2-stats="{{ goals2 }},{{ wins2 }},{{ clean2 }},{{ losses2 }},{{ conceded2 }}"
+        data-team2-color="{{ color2 }}"
+      ></canvas>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const canvas = document.getElementById("teamComparisonChart");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    const team1Name = canvas.dataset.team1Name;
+    const team1Stats = canvas.dataset.team1Stats.split(",").map(Number);
+    const color1 = canvas.dataset.team1Color;
+
+    const team2Name = canvas.dataset.team2Name;
+    const team2Stats = canvas.dataset.team2Stats.split(",").map(Number);
+    const color2 = canvas.dataset.team2Color;
+
+    const hexToRgbA = (hex, alpha) => {
+      let c;
+      if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+        c = hex.substring(1).split("");
+        if (c.length === 3) {
+          c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+        }
+        c = "0x" + c.join("");
+        return (
+          "rgba(" +
+          [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(",") +
+          "," +
+          alpha +
+          ")"
+        );
+      }
+      return `rgba(255, 255, 255, ${alpha})`;
+    };
+
+    new Chart(ctx, {
+      type: "radar",
+      data: {
+        labels: [
+          "Goals Scored",
+          "Wins",
+          "Clean Sheets",
+          "Losses",
+          "Goals Conceded",
+        ],
+        datasets: [
+          {
+            label: team1Name,
+            data: team1Stats,
+            backgroundColor: hexToRgbA(color1, 0.3),
+            borderColor: color1,
+            pointBackgroundColor: color1,
+            borderWidth: 2,
+          },
+          {
+            label: team2Name,
+            data: team2Stats,
+            backgroundColor: hexToRgbA(color2, 0.3),
+            borderColor: color2,
+            pointBackgroundColor: color2,
+            borderWidth: 2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            angleLines: { color: "rgba(255, 255, 255, 0.1)" },
+            grid: { color: "rgba(255, 255, 255, 0.1)" },
+            pointLabels: {
+              color: "#aaaaaa",
+              font: {
+                size: 12,
+                family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+              },
+            },
+            ticks: { display: false },
+          },
+        },
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: {
+              color: "#ffffff",
+              padding: 20,
+              font: { size: 13, weight: "bold" },
+            },
+          },
+        },
+      },
+    });
+  });
+</script>
+{% endblock %}
