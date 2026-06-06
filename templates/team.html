@@ -13,8 +13,12 @@
         <span class="text-muted">{{ team.stadium_location }}</span>
       </div>
     </div>
-    <button class="btn btn-outline-light rounded-pill px-4 fw-bold">
-      Follow
+   <button id="favoriteBtn" 
+            class="btn {% if is_favorite %}btn-light{% else %}btn-outline-light{% endif %} rounded-pill px-4 fw-bold"
+            data-team-id="{{ team.id }}"
+            data-team-name="{{ team.name }}"
+            data-team-logo="{{ team.badge_url }}">
+      {% if is_favorite %}Unfollow{% else %}Follow{% endif %}
     </button>
   </div>
 
@@ -540,6 +544,43 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
+      const favBtn = document.getElementById("favoriteBtn");
+      
+      if (favBtn) {
+        favBtn.addEventListener("click", function() {
+          const teamId = this.getAttribute("data-team-id");
+          const teamName = this.getAttribute("data-team-name");
+          const teamLogo = this.getAttribute("data-team-logo");
+          
+          fetch("/api/favorites/toggle", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              team_id: teamId,
+              team_name: teamName,
+              team_logo: teamLogo
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              if (data.is_favorite) {
+                this.classList.remove("btn-outline-light");
+                this.classList.add("btn-light");
+                this.innerText = "Unfollow";
+              } else {
+                this.classList.remove("btn-light");
+                this.classList.add("btn-outline-light");
+                this.innerText = "Follow";
+              }
+            }
+          })
+          .catch(error => console.error("Error toggling favorite:", error));
+        });
+      }
+
       const items = document.querySelectorAll(".fixture-item");
       const prevBtn = document.getElementById("prevPageBtn");
       const nextBtn = document.getElementById("nextPageBtn");
@@ -591,3 +632,4 @@
   </script>
   {% endblock %}
 </div>
+    

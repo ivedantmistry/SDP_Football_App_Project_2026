@@ -292,7 +292,6 @@ def stadiums():
         else:
             print(f"Loaded {len(players)} players directly from local database!")
 
-        # Group players by position for UI presentation
         grouped_squad = {
             "Goalkeepers": [],
             "Defenders": [],
@@ -300,7 +299,6 @@ def stadiums():
             "Attackers": [],
         }
         for p in players:
-            # Handle tuple from SQLite vs dictionary from direct return
             pos = p.get("position") if isinstance(p, dict) else p[4]
 
             if pos == "Goalkeeper":
@@ -312,8 +310,9 @@ def stadiums():
             elif pos == "Attacker":
                 grouped_squad["Attackers"].append(p)
 
-        # Clean up empty groups
         final_squad = {k: v for k, v in grouped_squad.items() if len(v) > 0}
+
+        is_fav = db_manager.is_favorite(team_id)
 
         return render_template(
             "team.html",
@@ -321,6 +320,7 @@ def stadiums():
             fixtures=fixtures_data,
             squad=final_squad,
             coach=coach_data,
+            is_favorite=is_fav,
         )
     else:
         return f"<body style='background-color: #000; color: #fff; text-align: center;'><h1>Team '{team_query}' not found.</h1><a href='/' style='color: #fff;'>Try again</a></body>"
@@ -358,8 +358,24 @@ def api_search():
 @app.route("/dashboard")
 def dashboard():
     """Displays saved favorites and search history."""
-    return render_template("dashboard.html")
+    favorites = db_manager.get_all_favorites()
+    return render_template("dashboard.html", favorites=favorites)
 
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+
+
+@app.route("/api/favorites/toggle", methods=["POST"])
+def api_toggle_favorite():
+    """API endpoint to add/remove a team from favorites."""
+    data = request.json
+    team_id = data.get("team_id")
+    team_name = data.get("team_name")
+    team_logo = data.get("team_logo")
+    
+    if not team_id:
+        return jsonify({"error": "Missing team_id"}), 400
+        
+    is_fav = db_manager.toggle_favorite(team_id, team_name, team_logo)
+    return jsonify({"success": True, "is_favorite": is_fav})

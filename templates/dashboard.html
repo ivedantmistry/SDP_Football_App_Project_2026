@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-white mb-0">Control Panel</h2>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="surface-card p-4">
+                <h5 class="fw-bold mb-4 text-white">Your Saved Teams</h5>
+
+                {% if favorites %}
+                <div class="row g-4">
+                    {% for team in favorites %}
+                    <div class="col-md-4 col-lg-3">
+                        <a href="{{ url_for('stadiums', team_name=team.name) }}" class="text-decoration-none">
+                            <div class="widget-card position-relative p-4 text-center h-100 transition-hover d-flex flex-column align-items-center"
+                                style="background-color: #1e1e1e; border: 1px solid #333; border-radius: 12px;">
+                                <img src="{{ team.logo }}" alt="{{ team.name }}" class="mb-3"
+                                    style="width: 80px; height: 80px; object-fit: contain;">
+                                <h6 class="fw-bold text-white mb-0" style="font-size: 1.05rem;">{{ team.name }}</h6>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <p class="text-muted-custom fs-5">You haven't saved any teams yet.</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-light mt-2">Explore Teams</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .transition-hover {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s;
+    }
+
+    .transition-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+        background-color: #252525 !important;
+        border-color: #555 !important;
+    }
+</style>
+{% endblock %}
