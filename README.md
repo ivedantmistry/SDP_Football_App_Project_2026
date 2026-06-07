@@ -1,28 +1,30 @@
 # Football Match, Team & Stadium Explorer
 
 **Course:** Software Development Practice - Final Project  
-**Term:** SoSe 2026 - Stuttgart Campus  
+**Term:** SoSe 2026 - Stuttgart Campus
 
 ---
 
 ## Team Members
 
-* **Vedant Mistry** - (100008344)
-* **Phong Dinh** - (100008610)
+- **Vedant Mistry** - (100008344)
+- **Phong Dinh** - (100008610)
 
 ---
 
 # 1. Project Scope
 
-We are building a Flask web application that allows users to search for football leagues, teams, or cities. Users can explore upcoming and previous match results, view rich team details and visualize stadium locations on a map.
+We built a Flask web application inspired by FotMob that allows users to explore football leagues, teams, and matches. Users can view match schedules, team statistics and squads, stadium locations and compare two teams head-to-head.
 
 ## Core Features
 
-- **Search:** Search for teams and leagues.
+- **Fixtures & Top Scorers:** Matches across top leagues with top scorers of each league.
+- **Search:** Search for teams.
 - **Match Data:** Display schedules and past results.
-- **Team Details:** Show badges and stadium information.
+- **Team Details:** Detailed team profiles including current manager, stadium details, full player roster grouped by position, and league standings.
+- **Team Comparison Dashboard:** A head-to-head statistical comparison tool between teams within the same league.
 - **Interactive Map:** Plot stadium locations using Folium.
-- **Saving Favorites**: Save favorite teams and previous searches using SQLite.
+- **Favorites:** Save favorite teams to your own tab.
 
 ---
 
@@ -31,21 +33,23 @@ We are building a Flask web application that allows users to search for football
 ```text
 football-explorer/
 │
-├── app.py                 # Main Flask application and routes
-├── api_client.py          # Handles requests to OpenLigaDB, TheSportsDB, Overpass
-├── db_manager.py          # SQLite database connection and queries
-├── visuals.py             # Folium map generation and Matplotlib/Plotly charts
-├── database.db            # Local SQLite database (Generated on run)
-├── requirements.txt       # Project dependencies (Flask, requests, folium, etc.)
+├── app.py                      # Main Flask application and routing logic
+├── football_api_manager.py     # Centralized API Manager (Primary & Fallback Logic)
+├── db_manager.py               # SQLite database connection, caching, and queries
+├── utils/
+│   └── country_flags.py        # Static mapping for FlagCDN integration
+├── database.db                 # Local SQLite database (Generated on run)
+├── requirements.txt            # Project dependencies
 ├── static/
-│   ├── css/style.css      # Custom styling
-│   └── js/main.js         # Frontend logic (Search autocomplete)
+│   └── css/style.css           # Custom UI styling and overrides
 │
 └── templates/
-    ├── base.html          # Bootstrap layout template
-    ├── index.html         # Landing page and search bar
-    ├── dashboard.html     # Control panel for saved favorites and history
-    └── map.html           # Map visualization page
+    ├── base.html               # Master Bootstrap layout template
+    ├── index.html              # Home page (Leagues, Matches, Top Scorers)
+    ├── team.html               # Team profile, squad list, and stadium map
+    ├── compare.html            # Team vs Team statistical comparison dashboard
+    ├── favourites.html         # Saved favorites and search history
+    └── match_details.html      # Simplified match details view
 ```
 
 ---
@@ -56,64 +60,54 @@ Work is distributed evenly across the stack to ensure both members contribute to
 
 ## Vedant Mistry Tasks
 
-- Implements `api_client.py` for:
-  - OpenLigaDB (match schedules)
-  - Overpass API (GPS coordinates)
-- Implements `visuals.py` for:
-  - Folium maps
-  - Statistical charts 
-- Manages:
-  - `favorites`
-- Develops HTML/Bootstrap/Javascript UI for maps, charts and overall design approach
-- Designs the SQLite schema and implements `db_manager.py`
+- Database Architecture: Developed db_manager.py, designed the SQLite schema for users, favorites, and search history.
+- Seed Logic: Implemented seed_script for initial database population.
+- Mapping & Visualization: Developed Folium map generation and stadium geocoding logic.
+- User Features: Built the Favorites system (favourites.html logic/template) and League Standings tables.
 
 ## Phong Dinh Tasks
 
-- Implements `api_client.py` for:
-  - TheSportsDB (team details and stadiums)
-- Creates and manages:
-  - `search_history`
-  - `matches`
-  - `stadiums`
-- Manages:
-  - `teams`
-- Develops HTML/Bootstrap/Javascript UI for matches and stadium
-- Builds Flask routes in `app.py`
+- Core API Architecture: Built football_api_manager.py, including the dual-API Fallback mechanism and JSON data adapter patterns.
+- Backend Routing: Developed all primary Flask routes in app.py.
+- Frontend & UI: Designed and developed core interfaces:
+  - Home Page (index.html) with dynamic league, matchday and top scorers.
+  - Team Overview and Squad pages (team.html).
+  - Comparison Dashboard (compare.html).
+- Data Integration: Implemented data-flattening logic to bridge API response structures with frontend template requirements.
 
 ---
 
-# 4. Initial API & Backend Layer Plan
+# 4. API & Backend Architecture
 
 ## External APIs
 
-### 1. OpenLigaDB
+### Primary API: API-Sports (v3)
+
 Used for:
-- Current matchday schedules
-- Past results
+
+- League fixtures from the top leagues
+- Full squad rosters and player details (height, age, jersey number)
 - League standings and tables
 
-### 2. TheSportsDB (v1)
-Used for:
-- Team badges
-- Stadium names
-- Team details and media assets
+### 2. Fallback API: Football-Data.org (v4)
 
-### 3. Overpass API
 Used for:
-- Stadium geographic coordinates
-- Latitude and longitude for map visualization
+
+- A custom \_adapt_fd_fixtures_to_sports_format method translates the Football-Data JSON structure into the API-Sports format, allowing the frontend to render seamlessly without knowing which API provided the data.
+
+### 3. Supplementary APIs:
+
+- Nominatim (Geopy): Converts stadium names and cities into GPS coordinates.
+- FlagCDN: Dynamically fetches country flags for player nationalities.
 
 ---
 
 # Technologies Used
 
-- **Python 3**
-- **Flask or Django**
-- **SQLite**
-- **Bootstrap 5**
-- **Folium**
-- **Requests**
-- **HTML / CSS / JavaScript**
+- **Backend: Python 3, Flask, SQLite3**
+- **Frontend: HTML5, CSS3, Bootstrap 5, Jinja2 Templating**
+- **Mapping & Geo: Folium, Geopy**
+- **HTTP & Utilities: requests, python-dotenv, re, datetime**
 
 ---
 
@@ -136,6 +130,5 @@ Used for:
 - [x] Professor invited as collaborator
 
 ---
-
 
 This project is developed as part of the Software Development Practice course. The application focuses on API integration, backend development, database management, and interactive visualization techniques using Flask and Python.
