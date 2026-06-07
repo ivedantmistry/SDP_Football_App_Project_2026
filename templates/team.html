@@ -466,8 +466,10 @@
             id="fixturesContainer"
           >
             {% for match in fixtures.all_matches %}
-            <div
-              class="list-group-item fixture-item bg-transparent border-dark py-3 px-3 align-items-center justify-content-between d-none"
+
+            <a
+              href="{{ url_for('match_details', fixture_id=match.fixture_id) }}"
+              class="list-group-item fixture-item bg-transparent border-dark py-3 px-3 align-items-center justify-content-between text-decoration-none transition-hover d-none"
             >
               <div
                 class="text-white text-start flex-shrink-0"
@@ -551,7 +553,7 @@
                 </div>
                 {% endif %}
               </div>
-            </div>
+            </a>
             {% endfor %}
           </div>
         </div>

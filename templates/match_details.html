@@ -1,0 +1,136 @@
+{% extends "base.html" %} {% block content %}
+<div class="container-fluid mt-4" style="max-width: 800px; margin: 0 auto">
+  <div class="d-flex align-items-center mb-4">
+    <a
+      href="javascript:history.back()"
+      class="btn btn-sm text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+      style="
+        background-color: #1e1e1e;
+        width: 36px;
+        height: 36px;
+        text-decoration: none;
+      "
+    >
+      &lsaquo;
+    </a>
+    <span class="text-muted" style="font-size: 0.9rem">
+      {{ match.league.name }} - {{ match.fixture.date[:10] }}
+    </span>
+  </div>
+
+  <div
+    class="widget-card p-4 mb-4 text-center"
+    style="
+      background-color: #1e1e1e;
+      border-radius: 16px;
+      border: 1px solid #333;
+    "
+  >
+    <div class="text-muted mb-3" style="font-size: 0.85rem">
+      📍 {{ match.fixture.venue.name }} | ⏱️ {{ match.fixture.status.long }}
+    </div>
+
+    <div class="d-flex justify-content-center align-items-center mb-3">
+      <div class="text-end" style="flex: 1">
+        <h4 class="text-white fw-bold mb-0 d-none d-md-block">
+          {{ match.teams.home.name }}
+        </h4>
+        <h5 class="text-white fw-bold mb-0 d-md-none">
+          {{ match.teams.home.name[:10] }}
+        </h5>
+      </div>
+      <img
+        src="{{ match.teams.home.logo }}"
+        class="mx-3"
+        style="width: 60px; height: 60px; object-fit: contain"
+      />
+
+      <div class="px-4">
+        <h1 class="text-white fw-bold mb-0" style="font-size: 3rem">
+          {{ match.goals.home }} - {{ match.goals.away }}
+        </h1>
+      </div>
+
+      <img
+        src="{{ match.teams.away.logo }}"
+        class="mx-3"
+        style="width: 60px; height: 60px; object-fit: contain"
+      />
+      <div class="text-start" style="flex: 1">
+        <h4 class="text-white fw-bold mb-0 d-none d-md-block">
+          {{ match.teams.away.name }}
+        </h4>
+        <h5 class="text-white fw-bold mb-0 d-md-none">
+          {{ match.teams.away.name[:10] }}
+        </h5>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="widget-card p-4 mb-5"
+    style="
+      background-color: #1e1e1e;
+      border-radius: 16px;
+      border: 1px solid #333;
+    "
+  >
+    <h6
+      class="text-center text-white fw-bold mb-4 border-bottom border-dark pb-3"
+    >
+      Key Events
+    </h6>
+
+    {% if match.events %}
+    <div class="events-container px-2">
+      {% for event in match.events %} {% if event.type in ['Goal', 'Card'] %}
+      <div
+        class="d-flex align-items-center mb-3 py-2 border-bottom border-dark"
+      >
+        <div class="fw-bold text-white me-3" style="width: 40px">
+          {{ event.time.elapsed }}'
+        </div>
+
+        <div class="me-3">
+          {% if event.type == 'Goal' %} ⚽ {% elif event.type == 'Card' and
+          event.detail == 'Yellow Card' %}
+          <div
+            style="
+              width: 14px;
+              height: 20px;
+              background-color: #eab308;
+              border-radius: 2px;
+            "
+          ></div>
+          {% elif event.type == 'Card' and event.detail == 'Red Card' %}
+          <div
+            style="
+              width: 14px;
+              height: 20px;
+              background-color: #ef4444;
+              border-radius: 2px;
+            "
+          ></div>
+          {% else %} 📌 {% endif %}
+        </div>
+
+        <div style="flex: 1">
+          <span class="text-white fw-medium">{{ event.player.name }}</span>
+          <span class="text-muted ms-2" style="font-size: 0.85rem"
+            >({{ event.team.name }})</span
+          >
+          {% if event.type == 'Goal' and event.assist.name %}
+          <div class="text-muted" style="font-size: 0.8rem">
+            Assist: {{ event.assist.name }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %} {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center text-muted">No key events available yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
