@@ -36,8 +36,8 @@
 
       <button
         id="favoriteBtn"
-        class="btn {% if is_favorite %}btn-light{% else %}btn-outline-light{% endif %} rounded-pill px-4 fw-bold transition-hover"
-        style="height: 40px"
+        class="btn rounded-pill d-flex align-items-center justify-content-center fw-medium transition-hover {% if is_favorite %}btn-follow-active{% else %}btn-follow-inactive{% endif %}"
+        style="width: 115px; height: 40px; font-size: 0.9rem"
         data-team-id="{{ team.id }}"
         data-team-name="{{ team.name }}"
         data-team-logo="{{ team.badge_url }}"
@@ -227,7 +227,7 @@
         </div>
 
         <div class="widget-card p-3">
-          <h6 class="fw-bold mb-3">Daily summary</h6>
+          <h6 class="fw-bold mb-3">Summary</h6>
           <p class="text-white" style="font-size: 0.9rem; line-height: 1.6">
             {{ team.description }}
           </p>
@@ -246,43 +246,55 @@
         >
           <div class="p-4 pb-3">
             <div class="d-flex align-items-center mb-3">
-              <div
-                class="d-flex align-items-center justify-content-center rounded-circle"
-                style="
-                  width: 44px;
-                  height: 44px;
-                  background-color: #2b2b2b;
-                  border: 1px solid #444;
-                  flex-shrink: 0;
-                "
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="#fff"
-                  viewBox="0 0 24 24"
+              <div class="d-flex align-items-center mb-3">
+                <div
+                  class="d-flex align-items-center justify-content-center rounded-circle"
+                  style="
+                    width: 44px;
+                    height: 44px;
+                    background-color: #2b2b2b;
+                    border: 1px solid #444;
+                    flex-shrink: 0;
+                  "
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="1.5"
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  ></path>
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="1.5"
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  ></path>
-                </svg>
-              </div>
-              <div class="ms-3">
-                <h5 class="fw-bold text-white mb-0" style="font-size: 1.1rem">
-                  {{ team.stadium_name }}
-                </h5>
-                <div class="text-muted-custom" style="font-size: 0.85rem">
-                  {{ team.stadium_location }}
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g clip-path="url(#clip0_1150_25961)">
+                      <g>
+                        <path
+                          d="M12.2862 9.04636H14.9525L13.9337 6.29636L13.7775 5.98261C13.6094 5.68921 13.3704 5.44267 13.0823 5.26556C12.7943 5.08845 12.4664 4.98644 12.1287 4.96886H8.12874C7.73941 4.98045 7.36178 5.1047 7.04163 5.32657C6.72149 5.54843 6.47255 5.85838 6.32499 6.21886L5.22874 9.04636H7.97874C8.17215 8.63375 8.48326 8.28756 8.87295 8.05135C9.26263 7.81514 9.71347 7.69946 10.1687 7.71886C10.6127 7.70947 11.0497 7.83014 11.426 8.06601C11.8022 8.30189 12.1013 8.64266 12.2862 9.04636Z"
+                          fill="#ffffff"
+                        ></path>
+                        <path
+                          d="M18.2462 8.41886L16.05 3.63636L15.815 3.24386C15.5495 2.86982 15.196 2.56686 14.7857 2.36173C14.3755 2.15659 13.921 2.05558 13.4625 2.06761H6.71874C6.20623 2.07224 5.7041 2.21255 5.26343 2.47428C4.82276 2.736 4.45928 3.10979 4.20999 3.55761L2.09249 8.10511C1.71781 8.83182 1.52926 9.64013 1.54374 10.4576V14.2214C1.54408 15.2195 1.94072 16.1766 2.64649 16.8824C3.35226 17.5881 4.30939 17.9848 5.30749 17.9851H14.9525C15.9506 17.9848 16.9077 17.5881 17.6135 16.8824C18.3193 16.1766 18.7159 15.2195 18.7162 14.2214V10.5364C18.7193 9.80432 18.5588 9.08085 18.2462 8.41886ZM17.1487 10.8501V11.1639C17.1461 11.6981 16.9432 12.2119 16.58 12.6037C16.2169 12.9956 15.72 13.2369 15.1875 13.2801C15.4268 12.8186 15.5609 12.3097 15.58 11.7901V11.3176C15.5927 11.0795 15.5661 10.8409 15.5012 10.6114H12.365C12.1717 11.0257 11.8599 11.3733 11.4689 11.6103C11.078 11.8473 10.6255 11.963 10.1687 11.9426C9.71459 11.9525 9.267 11.833 8.87829 11.5979C8.48959 11.3628 8.17585 11.0219 7.97374 10.6151H4.75874C4.75874 10.8501 4.67999 11.0851 4.67999 11.3214V11.7914C4.6897 12.3119 4.82431 12.8225 5.07249 13.2801C4.54023 13.2366 4.04362 12.9951 3.68074 12.6033C3.31787 12.2115 3.1151 11.6979 3.11249 11.1639V10.4576C3.1302 9.8626 3.26351 9.27671 3.50499 8.73261L5.62124 4.26261C5.73221 4.07037 5.89237 3.91115 6.08525 3.80131C6.27814 3.69146 6.49679 3.63496 6.71874 3.63761H13.4625C13.8487 3.66205 14.212 3.82963 14.4812 4.10761L16.8337 9.12636C17.049 9.56516 17.1566 10.0489 17.1475 10.5376L17.1487 10.8501Z"
+                          fill="#ffffff"
+                        ></path>
+                        <path
+                          d="M10.09 9.28136C9.69748 9.28136 9.30623 9.51636 9.30623 9.83011C9.30623 10.1439 9.69873 10.3789 10.09 10.3789C10.4812 10.3789 10.8737 10.1439 10.8737 9.83011C10.8737 9.51636 10.4825 9.28136 10.09 9.28136Z"
+                          fill="#ffffff"
+                        ></path>
+                      </g>
+                    </g>
+                    <defs>
+                      <clipPath id="clip0_1150_25961">
+                        <rect width="20" height="20" fill="transparent"></rect>
+                      </clipPath>
+                    </defs>
+                  </svg>
+                </div>
+
+                <div class="ms-3">
+                  <h5 class="fw-bold text-white mb-0" style="font-size: 1.1rem">
+                    {{ team.stadium_name }}
+                  </h5>
+                  <div class="text-muted-custom" style="font-size: 0.85rem">
+                    {{ team.stadium_location }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -312,18 +324,25 @@
           </div>
 
           <div
+            class="flex-shrink-0"
             style="
               width: 100%;
               height: 220px;
               background-color: #111;
               border-top: 1px solid #333;
               border-bottom: 1px solid #333;
+              overflow: hidden;
+              position: relative;
+              z-index: 1;
             "
           >
             {{ stadium_map | safe }}
           </div>
 
-          <div class="p-3 mt-auto bg-transparent">
+          <div
+            class="p-3 mt-auto"
+            style="background-color: #1e1e1e; position: relative; z-index: 2"
+          >
             <a
               href="{{ directions_url }}"
               target="_blank"
@@ -468,7 +487,7 @@
             {% for match in fixtures.all_matches %}
 
             <a
-              href="{{ url_for('match_details', fixture_id=match.fixture_id) }}"
+              href="{{ url_for('match_details', fixture_id=match.fixture.id) }}"
               class="list-group-item fixture-item bg-transparent border-dark py-3 px-3 align-items-center justify-content-between text-decoration-none transition-hover d-none"
             >
               <div
@@ -694,7 +713,8 @@
       </h5>
 
       <div class="row g-3 mb-5">
-        {% for player in players_in_group %}
+        {% for player in players_in_group %} console.log("Dữ liệu cầu thủ:", {{
+        player | tojson }});
         <div class="col-6 col-md-4 col-lg-3">
           <div
             class="widget-card position-relative p-3 text-center h-100 transition-hover d-flex flex-column align-items-center"
@@ -743,8 +763,14 @@
               {% if player.flag_url %}
               <img
                 src="{{ player.flag_url }}"
-                alt="Flag"
-                style="width: 18px; border-radius: 2px"
+                alt="{{ player.nationality }}"
+                title="{{ player.nationality }}"
+                style="
+                  width: 20px;
+                  height: 14px;
+                  border-radius: 2px;
+                  object-fit: cover;
+                "
               />
               {% endif %}
               <span class="text-white-50 text-truncate" style="max-width: 80px"
@@ -765,10 +791,9 @@
               </div>
               <div class="d-flex justify-content-between px-1">
                 <span>Height</span>
-                <span class="text-white fw-medium"
-                  >{% if player.height %}{{ player.height }}{% else %}-{% endif
-                  %}</span
-                >
+                <span class="text-white fw-medium">
+                  {{ player.height | replace(' cm', '') }} cm
+                </span>
               </div>
             </div>
           </div>
@@ -840,6 +865,14 @@
   .custom-dark-table tbody tr:hover {
     background-color: #2b2b2b !important;
   }
+
+  .btn-follow-inactive,
+  .btn-follow-active {
+    width: 115px;
+    height: 40px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+  }
 </style>
 
 <script>
@@ -866,14 +899,16 @@
           .then((response) => response.json())
           .then((data) => {
             if (data.success) {
-              if (data.is_favorite) {
-                this.classList.remove("btn-outline-light");
-                this.classList.add("btn-light");
-                this.innerText = "Unfollow";
+              const isNowFavorite = data.is_favorite;
+
+              if (isNowFavorite) {
+                favBtn.classList.remove("btn-follow-inactive");
+                favBtn.classList.add("btn-follow-active");
+                favBtn.innerText = "Unfollow";
               } else {
-                this.classList.remove("btn-light");
-                this.classList.add("btn-outline-light");
-                this.innerText = "Follow";
+                favBtn.classList.remove("btn-follow-active");
+                favBtn.classList.add("btn-follow-inactive");
+                favBtn.innerText = "Follow";
               }
             }
           })
@@ -927,4 +962,5 @@
     }
   });
 </script>
+
 {% endblock %}

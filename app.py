@@ -2,14 +2,6 @@ from datetime import datetime
 import re
 import time
 from flask import Flask, jsonify, render_template, request, redirect, url_for
-from api_client import (
-    fetch_squad_from_api,
-    get_team_coach,
-    get_top_scorers,
-    search_teams_list,
-    get_exact_team,
-    get_league_standings,
-)
 from football_api_manager import api_manager
 import db_manager
 import folium
@@ -53,12 +45,8 @@ def index():
         < CACHE_DURATION
     ):
         all_matches = CACHE["fixtures_by_league"][cache_key_league]["data"]
-    # Sửa từ: all_matches = get_league_fixtures(current_league_id)
-    # Thành thế này:
     else:
         all_matches = api_manager.get_league_fixtures(current_league_id)
-
-        # all_matches = api_manager.get_league_fixtures(current_league_id)
 
         if all_matches:
             CACHE["fixtures_by_league"][cache_key_league] = {
@@ -66,12 +54,10 @@ def index():
                 "timestamp": current_time,
             }
 
-    # Extract unique rounds from the matches
     rounds = set()
     for m in all_matches:
         rounds.add(m["league"]["round"])
 
-    # Helper function to extract numeric part of round for proper sorting
     def extract_round_num(r_str):
         if not r_str:
             return 0
@@ -80,10 +66,8 @@ def index():
 
     sorted_rounds = sorted(list(rounds), key=extract_round_num)
 
-    # Get the selected round from query parameters
     selected_round = request.args.get("round")
 
-    # If no round is selected, choose the most recent finished round or the latest round
     if not selected_round and sorted_rounds:
         finished_rounds = [
             m["league"]["round"]
@@ -97,7 +81,6 @@ def index():
         else:
             selected_round = sorted_rounds[-1]
 
-    # Determine previous and next rounds for navigation
     prev_round = None
     next_round = None
     if selected_round in sorted_rounds:
@@ -107,13 +90,8 @@ def index():
         if current_idx < len(sorted_rounds) - 1:
             next_round = sorted_rounds[current_idx + 1]
 
-    # Filter matches for the selected round
     round_matches = [m for m in all_matches if m["league"]["round"] == selected_round]
 
-    # If no matches found for the selected round, fallback to showing all matches for the league
-    round_matches = [m for m in all_matches if m["league"]["round"] == selected_round]
-
-    #   Display the round in a user-friendly format (e.g., "Matchday 1", "Round 2", etc.)
     if selected_round:
         round_num = extract_round_num(selected_round)
         display_round = f"Matchday {round_num}" if round_num > 0 else selected_round
@@ -141,17 +119,13 @@ def index():
             except ValueError:
                 pass
 
-    # Check if cached top scorers data is available for the selected league
-    # Using league_id as the cache key for top scorers since they are typically league-specific
     cache_key_scorers = str(current_league_id)
     if cache_key_scorers in CACHE["scorers"] and (
         current_time - CACHE["scorers"][cache_key_scorers]["timestamp"] < CACHE_DURATION
     ):
         top_scorers = CACHE["scorers"][cache_key_scorers]["data"]
     else:
-        top_scorers = get_top_scorers(current_league_id)
-
-        # top_scorers = api_manager.get_top_scorers(current_league_id)
+        top_scorers = api_manager.get_top_scorers(current_league_id)
 
         if top_scorers:
             CACHE["scorers"][cache_key_scorers] = {
@@ -177,24 +151,20 @@ def index():
 
 @app.route("/search", methods=["GET", "POST"])
 def search():
-    """Handles user search input."""
     if request.method == "POST":
         query = request.form.get("search_query")
         return redirect(url_for("stadiums", team_name=query))
-
     return redirect(url_for("index"))
 
 
 @app.route("/api/history", methods=["GET"])
 def get_history():
-    """Retrieves the user's recent search history from the local database."""
     recent_searches = db_manager.get_recent_searches()
     return jsonify(recent_searches)
 
 
 @app.route("/api/history", methods=["POST"])
 def save_history():
-    """Saves a successfully searched team to the local search history."""
     data = request.json
     team_name = data.get("team_name")
     team_logo = data.get("team_logo")
@@ -207,7 +177,6 @@ def save_history():
 
 @app.route("/api/history", methods=["DELETE"])
 def delete_history():
-    """Deletes a specific entry or clears all recent searches."""
     data = request.json
     team_name = data.get("team_name")
 
@@ -221,20 +190,18 @@ def delete_history():
 
 @app.route("/matches")
 def matches():
-    """Displays match schedules and past results."""
     return render_template("base.html", content="Matches Page Placeholder")
 
 
 @app.route("/stadiums")
 def stadiums():
-    """Displays team details, stadium information, and dynamically loads the squad."""
     team_query = request.args.get("team_name")
     if not team_query:
         return redirect(url_for("index"))
 
     team_data = db_manager.get_team_profile(team_query)
     if not team_data:
-        team_data = get_exact_team(team_query)
+        team_data = api_manager.get_exact_team(team_query)
 
     if team_data:
         team_id = team_data["id"]
@@ -248,13 +215,12 @@ def stadiums():
                 lid = match.get("league_id")
                 if lid:
                     league_counts[lid] = league_counts.get(lid, 0) + 1
-
             if league_counts:
                 team_league_id = max(league_counts, key=league_counts.get)
 
         coach_data = db_manager.get_team_coach_local(team_id)
         if not coach_data:
-            api_coach = get_team_coach(team_id)
+            api_coach = api_manager.get_team_coach(team_id)
 
             if api_coach:
                 db_manager.insert_coach(
@@ -267,10 +233,10 @@ def stadiums():
                     team_league_id=team_league_id,
                 )
                 coach_data = db_manager.get_team_coach_local(team_id)
+
         players = db_manager.get_team_players(team_id)
         if not players:
-            print(f"Squad not in database. Fetching from API for Team ID: {team_id}...")
-            api_players_dict = fetch_squad_from_api(team_id)
+            api_players_dict = api_manager.fetch_squad_from_api(team_id)
 
             if api_players_dict:
                 for position_group, player_list in api_players_dict.items():
@@ -288,8 +254,6 @@ def stadiums():
                             team_id=team_id,
                         )
                 players = db_manager.get_team_players(team_id)
-        else:
-            print(f"Loaded {len(players)} players directly from local database!")
 
         grouped_squad = {
             "Goalkeepers": [],
@@ -299,7 +263,6 @@ def stadiums():
         }
         for p in players:
             pos = p.get("position") if isinstance(p, dict) else p[4]
-
             if pos == "Goalkeeper":
                 grouped_squad["Goalkeepers"].append(p)
             elif pos == "Defender":
@@ -310,7 +273,6 @@ def stadiums():
                 grouped_squad["Attackers"].append(p)
 
         final_squad = {k: v for k, v in grouped_squad.items() if len(v) > 0}
-
         is_fav = db_manager.is_favorite(team_id)
 
         cache_key_standings = f"standings_team_{team_id}"
@@ -319,12 +281,10 @@ def stadiums():
         )
 
         if not standings_data:
-            print(
-                f"Standings not in cache. Fetching from API for Team ID: {team_id}..."
-            )
-            standings_data = get_league_standings(team_id)
+            standings_data = api_manager.get_league_standings(team_id)
             if standings_data:
                 db_manager.save_cached_api_data(cache_key_standings, standings_data)
+
         stadium_map_html = get_stadium_map_html(
             team_data.get("stadium_name", ""), team_data.get("stadium_location", "")
         )
@@ -354,20 +314,14 @@ def stadiums():
 
 @app.route("/api/search")
 def api_search():
-    """Returns a JSON list of teams for the navbar dropdown."""
     query = request.args.get("q", "")
     if not query or len(query) < 3:
         return jsonify([])
 
-    # Prioritize Local Seed Database
     results = db_manager.search_local_teams(query)
 
-    # Fallback to Live API if not found locally
     if not results:
-        teams_data = search_teams_list(query)
-
-        # teams_data = api_manager.search_teams_list(query)
-
+        teams_data = api_manager.search_teams_list(query)
         results = []
         for team in teams_data:
             results.append(
@@ -377,43 +331,32 @@ def api_search():
                     "stadium": team["stadium_name"],
                 }
             )
-
     return jsonify(results)
 
 
-@app.route("/dashboard")
-def dashboard():
-    """Displays saved favorites and search history."""
+@app.route("/favourites")
+def favourites():
     favorites = db_manager.get_all_favorites()
-    return render_template("dashboard.html", favorites=favorites)
+    return render_template("favourites.html", favorites=favorites)
 
 
 @app.route("/compare")
 def compare_teams():
-    """
-    Renders the Team vs Team comparison dashboard (FotMob style).
-    Requires a primary team (team1) and an optional secondary team (team2).
-    """
-    # Retrieve query parameters
     team1_id = request.args.get("team1")
-    league_id = request.args.get("league", "39")  # Default to Premier League
-    season = 2024  # Current active season
+    league_id = request.args.get("league", "39")
+    season = 2024
 
-    # Redirect to home if the primary team ID is missing
     if not team1_id:
         return redirect(url_for("index"))
 
-    # Fetch statistics for the primary team
     stats1 = api_manager.get_team_statistics(league_id, season, team1_id)
     if not stats1:
         return "<body style='background-color: #000; color: #fff; text-align: center; margin-top: 50px;'><h1>Statistics not available for this team.</h1></body>"
 
     league_teams = api_manager.get_teams_in_league(league_id, season)
-
     if league_teams:
         league_teams.sort(key=lambda x: x["team"]["name"])
 
-    # Fetch statistics for the secondary team if selected by the user
     team2_id = request.args.get("team2")
     stats2 = None
     if team2_id:
@@ -424,7 +367,6 @@ def compare_teams():
 
     if stats2:
         color2 = get_team_color(stats2["team"]["name"])
-
         if color1 == color2:
             color2 = "#ffffff"
 
@@ -440,10 +382,7 @@ def compare_teams():
 
 
 def get_team_color(team_name):
-    """Returns a hex color code based on the team name for consistent theming in the comparison dashboard."""
     name = team_name.lower()
-
-    # Hardcoded colors for popular teams to ensure they stand out in the comparison dashboard
     if any(
         x in name
         for x in [
@@ -467,14 +406,12 @@ def get_team_color(team_name):
     elif any(x in name for x in ["paris", "psg"]):
         return "#1e3a8a"
 
-    # If the team is not in the hardcoded list, generate a consistent color based on its name
     colors = ["#10b981", "#8b5cf6", "#f59e0b", "#06b6d4", "#ec4899"]
     return colors[sum(ord(c) for c in name) % len(colors)]
 
 
 @app.route("/api/favorites/toggle", methods=["POST"])
 def api_toggle_favorite():
-    """API endpoint to add/remove a team from favorites."""
     data = request.json
     team_id = data.get("team_id")
     team_name = data.get("team_name")
@@ -488,39 +425,29 @@ def api_toggle_favorite():
 
 
 def get_stadium_map_html(stadium_name, city):
-    """Geocodes the stadium and returns a dark-mode Folium map as an HTML string."""
     geolocator = Nominatim(user_agent="fotmob_clone_app")
-
     try:
-        # Try finding the exact stadium first
         location = geolocator.geocode(f"{stadium_name}, {city}")
         if not location:
-            # Fallback to just the city if stadium isn't found
             location = geolocator.geocode(city)
 
         if location:
             lat, lon = location.latitude, location.longitude
         else:
-            # Default to London if all geocoding fails
             lat, lon = 51.5074, -0.1278
 
-        # Create Folium Map using a dark theme!
         m = folium.Map(
             location=[lat, lon],
             zoom_start=15,
             tiles="CartoDB dark_matter",
             control_scale=True,
         )
-
-        # Add a sleek marker
         folium.Marker(
             [lat, lon],
             tooltip=stadium_name,
             icon=folium.Icon(color="blue", icon="info-sign"),
         ).add_to(m)
-
         return m._repr_html_()
-
     except Exception as e:
         print(f"Geocoding error: {e}")
         return "<div class='text-center text-muted p-4' style='height: 100%; display: flex; align-items: center; justify-content: center;'>Map currently unavailable</div>"
@@ -528,13 +455,9 @@ def get_stadium_map_html(stadium_name, city):
 
 @app.route("/match/<int:fixture_id>")
 def match_details(fixture_id):
-    """Renders the simplified Match Details dashboard."""
     match_data = api_manager.get_fixture_details(fixture_id)
-
     if not match_data:
-        # If the API call fails or returns no data, show error message instead of a blank page
         return "<body style='background-color: #000; color: #fff; text-align: center; margin-top: 50px;'><h1>Match details temporarily unavailable.</h1><a href='javascript:history.back()' style='color: #10b981;'>Go back</a></body>"
-
     return render_template("match_details.html", match=match_data)
 
 
