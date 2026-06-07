@@ -117,8 +117,9 @@
         "
       >
         {% for match in league_matches %}
-        <div
-          class="d-flex align-items-center p-3 border-bottom border-dark hover-bg-dark transition-colors position-relative"
+        <a
+          href="{{ url_for('match_details', fixture_id=match.fixture.id) }}"
+          class="d-flex align-items-center p-3 border-bottom border-dark hover-bg-dark transition-colors position-relative text-decoration-none"
         >
           <div class="position-absolute" style="left: 15px">
             {% if match.fixture.status.short in ['FT', 'AET', 'PEN'] %}
@@ -203,7 +204,7 @@
               >{{ match.teams.away.name }}</span
             >
           </div>
-        </div>
+        </a>
         {% endfor %}
       </div>
       {% else %}
@@ -231,7 +232,6 @@
             Top Scorers ({{ current_league_name }})
           </h6>
         </div>
-
         <div class="d-flex flex-column">
           {% for player in top_scorers %}
           <div
@@ -274,9 +274,8 @@
                   <span
                     class="text-muted text-truncate"
                     style="font-size: 0.8rem"
+                    >{{ player.team_name }}</span
                   >
-                    {{ player.team_name }}
-                  </span>
                 </div>
               </div>
             </div>
@@ -305,7 +304,6 @@
     font-weight: bold;
     border-left: 3px solid #3b82f6;
   }
-
   .inactive-league {
     color: #ffffff !important;
     opacity: 0.75;

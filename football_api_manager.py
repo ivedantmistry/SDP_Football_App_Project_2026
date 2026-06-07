@@ -329,6 +329,7 @@ class FootballAPIManager:
 
             all_fixtures_data.append(
                 {
+                    "fixture_id": match["fixture"]["id"],
                     "date": formatted_date,
                     "time": time_12hr,
                     "status": status,
@@ -459,6 +460,23 @@ class FootballAPIManager:
             # Returns a list of dictionaries: [{"team": {...}, "venue": {...}}, ...]
             return response.data.get("response", [])
         return []
+
+    def get_fixture_details(self, fixture_id):
+        """Fetches comprehensive details for a single match (score, events, stats)."""
+        url = f"{self.sports_base_url}/fixtures"
+        params = {"id": fixture_id}
+
+        # Using the centralized robust wrapper to handle this critical request
+        response = self._make_request(url, self.headers_sports, params)
+
+        if response.success and response.data and response.data.get("response"):
+            # Returns a single fixture dictionary with all details (events, lineups, stats)
+            return response.data["response"][0]
+
+        print(
+            f"[API Manager] Warning: Could not fetch details for Fixture ID {fixture_id}."
+        )
+        return None
 
 
 # Initialize a global instance to be imported by app.py

@@ -526,5 +526,17 @@ def get_stadium_map_html(stadium_name, city):
         return "<div class='text-center text-muted p-4' style='height: 100%; display: flex; align-items: center; justify-content: center;'>Map currently unavailable</div>"
 
 
+@app.route("/match/<int:fixture_id>")
+def match_details(fixture_id):
+    """Renders the simplified Match Details dashboard."""
+    match_data = api_manager.get_fixture_details(fixture_id)
+
+    if not match_data:
+        # If the API call fails or returns no data, show error message instead of a blank page
+        return "<body style='background-color: #000; color: #fff; text-align: center; margin-top: 50px;'><h1>Match details temporarily unavailable.</h1><a href='javascript:history.back()' style='color: #10b981;'>Go back</a></body>"
+
+    return render_template("match_details.html", match=match_data)
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
