@@ -264,6 +264,7 @@ def stadiums():
                     nationality=api_coach.get("nationality"),
                     photo=api_coach.get("photo"),
                     team_id=team_id,
+                    team_league_id=team_league_id,
                 )
                 coach_data = db_manager.get_team_coach_local(team_id)
         players = db_manager.get_team_players(team_id)
@@ -345,6 +346,7 @@ def stadiums():
             standings=standings_data,
             stadium_map=stadium_map_html,
             directions_url=directions_url,
+            team_league_id=team_league_id,
         )
     else:
         return f"<body style='background-color: #000; color: #fff; text-align: center;'><h1>Team '{team_query}' not found.</h1><a href='/' style='color: #fff;'>Try again</a></body>"
@@ -438,10 +440,10 @@ def compare_teams():
 
 
 def get_team_color(team_name):
-    """Xác định màu sắc chủ đạo của đội bóng dựa vào tên."""
+    """Returns a hex color code based on the team name for consistent theming in the comparison dashboard."""
     name = team_name.lower()
 
-    # Nhóm Đỏ (Red)
+    # Hardcoded colors for popular teams to ensure they stand out in the comparison dashboard
     if any(
         x in name
         for x in [
@@ -465,7 +467,7 @@ def get_team_color(team_name):
     elif any(x in name for x in ["paris", "psg"]):
         return "#1e3a8a"
 
-    # Nếu đội bóng lạ, tạo màu ngẫu nhiên nhưng cố định theo tên
+    # If the team is not in the hardcoded list, generate a consistent color based on its name
     colors = ["#10b981", "#8b5cf6", "#f59e0b", "#06b6d4", "#ec4899"]
     return colors[sum(ord(c) for c in name) % len(colors)]
 
