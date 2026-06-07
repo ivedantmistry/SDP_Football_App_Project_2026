@@ -105,7 +105,7 @@ def init_db():
             last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    
+
     conn.commit()
     conn.close()
 
@@ -145,7 +145,7 @@ def insert_team(team_id, name, logo, venue_id):
 
 
 def save_search(team_name, team_logo):
-    """Lưu đội bóng vào lịch sử (Nếu đã có thì cập nhật lại thời gian mới nhất)"""
+    """Saves a team search entry."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
@@ -162,7 +162,7 @@ def save_search(team_name, team_logo):
 
 
 def get_recent_searches(limit=5):
-    """Lấy 5 đội bóng tìm kiếm gần nhất"""
+    """Gets the most recent search entries."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
@@ -178,7 +178,7 @@ def get_recent_searches(limit=5):
 
 
 def clear_all_searches():
-    """Xóa toàn bộ lịch sử tìm kiếm"""
+    """Clears all search entries."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM search_history")
@@ -187,7 +187,7 @@ def clear_all_searches():
 
 
 def delete_search(team_name):
-    """Xóa một đội bóng cụ thể khỏi lịch sử"""
+    """Deletes a specific search entry by team name."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM search_history WHERE team_name = ?", (team_name,))
@@ -442,7 +442,6 @@ def toggle_favorite(team_id, team_name, team_logo):
     return is_fav
 
 
-
 def is_favorite(team_id):
     """Checks if a specific team is marked as favorite."""
     conn = sqlite3.connect(DB_PATH)
@@ -494,7 +493,6 @@ def get_cached_api_data(endpoint_key, hours_valid=24):
         return json.loads(row[0])  # Data is fresh, return it
 
     return None  # Data is expired or missing
-
 
 
 def save_cached_api_data(endpoint_key, data):

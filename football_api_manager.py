@@ -93,6 +93,7 @@ class FootballAPIManager:
             adapted.append(
                 {
                     "fixture": {
+                        "id": match.get("id"),
                         "date": match.get("utcDate"),
                         "status": {"short": short_status},
                     },
@@ -380,23 +381,35 @@ class FootballAPIManager:
 
         for item in players_data:
             p_info = item.get("player", {})
-            pon = pos = None
-            for stat in item.get("statistics", []):
-                games = stat.get("games", {})
-                pon = games.get("number") if games.get("number") else pon
-                pos = games.get("position") if games.get("position") else pos
+            stats = item.get("statistics", [])
+
+            # 1. Lấy thông tin cơ bản
+            number = None
+            pos = None
+
+            # 2. Lấy dữ liệu từ block statistics nếu tồn tại
+            if stats and len(stats) > 0:
+                games = stats[0].get("games", {})
+                pos = games.get("position")
+                number = games.get("number")
+
+            # 3. Fallback: Nếu không tìm thấy số áo trong stats, tìm trong p_info
+            if not number:
+                number = p_info.get("number")  # Một số API-Sports version để ở đây
 
             player_dict = {
                 "id": p_info.get("id"),
                 "name": p_info.get("name"),
                 "age": p_info.get("age"),
-                "number": pon,
+                "number": number,
                 "position": pos,
                 "photo": p_info.get("photo"),
                 "nationality": p_info.get("nationality"),
                 "flag_url": self.get_flag_url(p_info.get("nationality")),
                 "height": p_info.get("height"),
             }
+
+            # 4. Gom nhóm an toàn
             if pos in ["Goalkeeper", "Defender", "Midfielder", "Attacker"]:
                 grouped_squad[f"{pos}s"].append(player_dict)
 
@@ -477,6 +490,61 @@ class FootballAPIManager:
             f"[API Manager] Warning: Could not fetch details for Fixture ID {fixture_id}."
         )
         return None
+
+    def get_league_standings(self, team_id, season=2024):
+        """Fetches the complete league standings table for the league the team plays in."""
+        url = f"{self.sports_base_url}/standings"
+        response = self._make_request(
+            url, self.headers_sports, {"team": team_id, "season": season}
+        )
+
+        if not response.success or not response.data:
+            return []
+
+        initial_data = response.data.get("response", [])
+        if not initial_data or len(initial_data) == 0:
+            return []
+
+        try:
+            league_id = initial_data[0].get("league", {}).get("id")
+            if not league_id:
+                return []
+
+            full_league_response = self._make_request(
+                url, self.headers_sports, {"league": league_id, "season": season}
+            )
+            if not full_league_response.success or not full_league_response.data:
+                return []
+
+            full_league_data = full_league_response.data.get("response", [])
+            if not full_league_data:
+                return []
+
+            standings = full_league_data[0]["league"]["standings"][0]
+
+            formatted_standings = []
+            for row in standings:
+                formatted_standings.append(
+                    {
+                        "rank": row.get("rank"),
+                        "team_id": row["team"]["id"],
+                        "team_name": row["team"]["name"],
+                        "team_logo": row["team"]["logo"],
+                        "played": row["all"]["played"],
+                        "win": row["all"]["win"],
+                        "draw": row["all"]["draw"],
+                        "lose": row["all"]["lose"],
+                        "goals_for": row["all"]["goals"]["for"],
+                        "goals_against": row["all"]["goals"]["against"],
+                        "goals_diff": row["goalsDiff"],
+                        "points": row["points"],
+                        "form": list(row.get("form", "")),
+                    }
+                )
+            return formatted_standings
+        except (IndexError, KeyError) as e:
+            print(f"[API Error] Error parsing full standings data: {e}")
+            return []
 
 
 # Initialize a global instance to be imported by app.py

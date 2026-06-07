@@ -9,31 +9,33 @@ load_dotenv()
 API_KEY = os.getenv("API_SPORTS_KEY")
 HEADERS = {"x-apisports-key": API_KEY}
 
+
 def seed_league_info(league_id):
     """Fetches the details for the league itself (name, logo, country) and saves it."""
     url = "https://v3.football.api-sports.io/leagues"
     params = {"id": league_id}
-    
+
     try:
         response = requests.get(url, headers=HEADERS, params=params)
         response.raise_for_status()
         data = response.json()
-        
+
         if data.get("response"):
             league_data = data["response"][0]["league"]
             country_data = data["response"][0]["country"]
-            
+
             db_manager.insert_league(
                 league_id=league_data.get("id"),
                 name=league_data.get("name"),
                 country=country_data.get("name"),
                 logo=league_data.get("logo"),
-                league_type=league_data.get("type")
+                league_type=league_data.get("type"),
             )
             print(f"✅ Seeded league info for: {league_data.get('name')}")
-            
+
     except requests.exceptions.RequestException as e:
         print(f"Error fetching league info for ID {league_id}: {e}")
+
 
 def seed_league(league_id, season):
     """Fetches all teams and venues for a given league and saves them to SQLite."""
@@ -79,27 +81,28 @@ def seed_league(league_id, season):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching data: {e}")
 
+
 if __name__ == "__main__":
     db_manager.init_db()
 
     leagues_to_seed = [
-        # 39,  # Premier League/
-        # 78,  # Bundesliga
-        # 140, # La Liga
-        # 135, # Serie A
-        # 61,  # Ligue 1
-        # 2,   # UEFA Champions League
-        3,   # UEFA Europa League
+        39,  # Premier League/
+        78,  # Bundesliga
+        140,  # La Liga
+        135,  # Serie A
+        61,  # Ligue 1
+        2,  # UEFA Champions League
+        3,  # UEFA Europa League
     ]
 
     season_to_use = 2024
 
     for l_id in leagues_to_seed:
         seed_league_info(league_id=l_id)
-        
+
         seed_league(league_id=l_id, season=season_to_use)
-        
-        time.sleep(1) 
+
+        time.sleep(1)
         print("-" * 30)
-        
+
     print("Database seeding complete!")
