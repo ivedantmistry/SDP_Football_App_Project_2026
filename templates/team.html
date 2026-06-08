@@ -484,12 +484,19 @@
             class="list-group list-group-flush bg-transparent"
             id="fixturesContainer"
           >
-            {% for match in fixtures.all_matches %}
+           {% for match in fixtures.all_matches %}
 
+            {% if match.fixture_id %}
             <a
-              href="{{ url_for('match_details', fixture_id=match.fixture.id) }}"
+              href="{{ url_for('match_details', fixture_id=match.fixture_id) }}"
               class="list-group-item fixture-item bg-transparent border-dark py-3 px-3 align-items-center justify-content-between text-decoration-none transition-hover d-none"
             >
+            {% else %}
+            <div
+              class="list-group-item fixture-item bg-transparent border-dark py-3 px-3 align-items-center justify-content-between transition-hover d-none"
+            >
+            {% endif %}
+
               <div
                 class="text-white text-start flex-shrink-0"
                 style="width: 20%; font-size: 0.85rem"
@@ -572,7 +579,13 @@
                 </div>
                 {% endif %}
               </div>
+              
+            {% if match.fixture_id %}
             </a>
+            {% else %}
+            </div>
+            {% endif %}
+
             {% endfor %}
           </div>
         </div>
@@ -713,8 +726,6 @@
       </h5>
 
       <div class="row g-3 mb-5">
-        {% for player in players_in_group %} console.log("Dữ liệu cầu thủ:", {{
-        player | tojson }});
         <div class="col-6 col-md-4 col-lg-3">
           <div
             class="widget-card position-relative p-3 text-center h-100 transition-hover d-flex flex-column align-items-center"

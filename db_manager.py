@@ -93,6 +93,7 @@ def init_db():
             age INTEGER,
             nationality TEXT,
             photo TEXT,
+            team_league_id INTEGER,
             team_id INTEGER UNIQUE,
             FOREIGN KEY (team_id) REFERENCES teams (team_id)
         )
@@ -326,18 +327,23 @@ def get_team_profile(team_name):
     return None
 
 
-def insert_coach(coach_id, name, age, nationality, photo, team_id):
+def insert_coach(coach_id, name, age, nationality, photo, team_id, team_league_id):
     """Lưu thông tin HLV vào database cục bộ."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO coaches (coach_id, name, age, nationality, photo, team_id)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO coaches (coach_id, name, age, nationality, photo, team_id, team_league_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(coach_id) DO UPDATE SET
-        name=excluded.name, age=excluded.age, nationality=excluded.nationality, photo=excluded.photo, team_id=excluded.team_id
+        name=excluded.name, 
+        age=excluded.age, 
+        nationality=excluded.nationality, 
+        photo=excluded.photo, 
+        team_id=excluded.team_id,
+        team_league_id=excluded.team_league_id
     """,
-        (coach_id, name, age, nationality, photo, team_id),
+        (coach_id, name, age, nationality, photo, team_id, team_league_id),
     )
     conn.commit()
     conn.close()
